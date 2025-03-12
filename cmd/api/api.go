@@ -18,6 +18,9 @@ type application struct {
 type config struct {
 	addr string
 	db   dbConfig
+	env	string
+	version string
+	maxByte int64 // max size for incoming http body to mitigate DDOS 
 }
 
 type dbConfig struct {
@@ -27,12 +30,7 @@ type dbConfig struct {
 	maxIdleTime  string
 }
 
-func (app *application) getHealthHandler(w http.ResponseWriter, r *http.Request) {
 
-	//TODO : implement
-	w.Write([]byte("Everything ok boss !"))
-
-}
 
 func (app *application) mnt_mux() *chi.Mux {
 
