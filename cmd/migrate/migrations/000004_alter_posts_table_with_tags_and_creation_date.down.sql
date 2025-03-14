@@ -1,0 +1,5 @@
+ALTER TABLE posts
+COLUMN DROP tags;
+
+ALTER TABLE posts
+COLUMN DROP Update_date;

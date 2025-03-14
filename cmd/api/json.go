@@ -12,7 +12,7 @@ func writeJson(w http.ResponseWriter, status int, data any) error {
 	return json.NewEncoder(w).Encode(data)
 }
 
-func readJson(app *application, w http.ResponseWriter, r *http.Request, data *any) error {
+func readJson(app *application, w http.ResponseWriter, r *http.Request, data any) error {
 
 	r.Body = http.MaxBytesReader(w, r.Body, app.config.maxByte) // to mitigate ddos
 	decoder := json.NewDecoder(r.Body)

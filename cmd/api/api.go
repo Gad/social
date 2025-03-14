@@ -44,6 +44,14 @@ func (app *application) mnt_mux() *chi.Mux {
 
 	mux.Route("/v1", func(m chi.Router) {
 		m.Get("/health", app.getHealthHandler)
+		m.Route("/posts", func(m chi.Router){
+			m.Post("/", app.createPostHandler)
+		    m.Route("/{postid}", func(m chi.Router){
+				m.Get("/", app.getPostHandler)
+				// + m.Patch + m.Delete post	etc.	
+				})
+		})
+		
 	})
 
 	return mux
