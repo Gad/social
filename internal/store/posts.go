@@ -13,13 +13,14 @@ var (
 )
 
 type Post struct {
-	ID           int64    `json:"id"`
-	Content      string   `json:"content"`
-	Title        string   `json:"title"`
-	UserID       int64    `json:"UserID"`
-	Tags         []string `json:"tags"`
-	CreationDate string   `json:"creation_date"`
-	UpdateDate   string   `json:"update_date"`
+	ID           int64     `json:"id"`
+	Content      string    `json:"content"`
+	Title        string    `json:"title"`
+	UserID       int64     `json:"UserID"`
+	Tags         []string  `json:"tags"`
+	CreationDate string    `json:"creation_date"`
+	UpdateDate   string    `json:"update_date"`
+	Comments     []Comment `json:"comments"`
 }
 
 type PostsStore struct {

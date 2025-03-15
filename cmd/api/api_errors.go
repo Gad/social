@@ -15,10 +15,16 @@ func (app *application) internalServerErrorResponse(w http.ResponseWriter, r *ht
 
 }
 
-func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
+func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Request, err error, showError bool) {
 
 	log.Printf("Bad Request Error: method: %s - path: %s - internal error: %s", r.Method, r.URL.Path, err.Error())
-	writeJsonError(w, http.StatusBadRequest, "request parsing failed - request probably malformed")
+	var msg string
+	if showError { 
+		msg = err.Error()
+	} else {
+		msg = "request parsing failed - request probably malformed"
+	} 
+	writeJsonError(w, http.StatusBadRequest, msg)
 
 }
 
