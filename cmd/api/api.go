@@ -47,8 +47,11 @@ func (app *application) mnt_mux() *chi.Mux {
 		m.Route("/posts", func(m chi.Router){
 			m.Post("/", app.createPostHandler)
 		    m.Route("/{postid}", func(m chi.Router){
+				m.Use(app.postToContextMiddleware)
 				m.Get("/", app.getPostHandler)
-				// + m.Patch + m.Delete post	etc.	
+				m.Delete("/", app.deletePostHandler)
+				m.Patch("/", app.patchPostHandler)
+			
 				})
 		})
 		

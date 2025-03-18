@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	ErrorNotFound = errors.New("record not found")
+	ErrorNotFound      = errors.New("record not found")
+	ErrorDeleteTooMany = errors.New("expected to affect 1 row, affected more")
 )
 
 type Post struct {
@@ -54,14 +55,14 @@ func (s *PostsStore) Create(ctx context.Context, p *Post) error {
 
 }
 
-func (s *PostsStore) GetPostById(ctx context.Context, postID int) (*Post, error) {
+func (s *PostsStore) GetPostById(ctx context.Context, postID int64) (*Post, error) {
 	query := `
 	SELECT content, title, user_id, tags, creation_date, update_date 
 	FROM posts 
 	WHERE id = $1;
 	`
 	p := &Post{
-		ID: int64(postID),
+		ID: postID,
 	}
 
 	err := s.db.QueryRowContext(
@@ -85,7 +86,66 @@ func (s *PostsStore) GetPostById(ctx context.Context, postID int) (*Post, error)
 			return nil, err
 		}
 	}
-
 	return p, nil
+}
+
+func (s *PostsStore) DeletePostById(ctx context.Context, postID int64) error {
+	query := `
+	DELETE FROM posts 
+	WHERE id = $1;
+	`
+
+	
+
+	result, err := s.db.ExecContext(
+		ctx,
+		query,
+		postID,
+	)
+	if err != nil {
+		return err
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	switch rows {
+	case 0:
+		return ErrorNotFound
+	case 1:
+		return nil
+	default:
+		return ErrorDeleteTooMany
+	}
+
+}
+
+func (s *PostsStore) UpdatePostById(ctx context.Context, post *Post) error {
+	query := `
+	UPDATE posts
+	SET title = $1, content =$2		
+	WHERE id = $3;`
+
+	result, err := s.db.ExecContext(
+		ctx,
+		query,
+		post.Title,
+		post.Content,
+		int64(post.ID),
+	)
+	if err != nil {
+
+		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrorNotFound
+	}
+
+	return nil
 
 }

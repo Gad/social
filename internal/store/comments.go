@@ -18,7 +18,7 @@ type Comment struct {
 	User         User   `json:"user"`
 }
 
-func (s *CommentsStore) GetCommentsByPostId(ctx context.Context, postID int) (*[]Comment, error) {
+func (s *CommentsStore) GetCommentsByPostId(ctx context.Context, postID int64) (*[]Comment, error) {
 	query := `
 	SELECT c.id, c.post_id, c.user_id, c.content, c.creation_date, u.username, u.id FROM "comments" c 
 	LEFT JOIN users u 

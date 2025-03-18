@@ -8,7 +8,9 @@ import (
 type Storage struct {
 	Posts interface {
 		Create(context.Context, *Post) error
-		GetPostById(context.Context, int) (*Post, error)
+		GetPostById(context.Context, int64) (*Post, error)
+		DeletePostById(context.Context, int64) error
+		UpdatePostById(context.Context, *Post) error
 		
 	}
 
@@ -17,7 +19,7 @@ type Storage struct {
 	}
 
 	Comments interface{
-		GetCommentsByPostId (context.Context, int) (*[]Comment, error)
+		GetCommentsByPostId (context.Context, int64) (*[]Comment, error)
 	}
 }
 
