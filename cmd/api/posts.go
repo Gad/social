@@ -139,8 +139,16 @@ func (app *application) patchPostHandler(w http.ResponseWriter, r *http.Request)
 		post.Title = *payload.Title
 	}
 	if err := app.store.Posts.UpdatePostById(r.Context(), post); err != nil {
-		app.internalServerErrorResponse(w, r, err)
+		switch {
+		case errors.Is(err, store.ErrorNotFound):
+			app.conflictResponse(w, r, err)
+
+		default:
+			app.internalServerErrorResponse(w, r, err)
+
+		}
 		return
+	
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, &post); err != nil {
