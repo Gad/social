@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/lib/pq"
 )
@@ -11,6 +12,7 @@ import (
 var (
 	ErrorNotFound      = errors.New("record not found")
 	ErrorDeleteTooMany = errors.New("expected to affect 1 row, affected more")
+	timeOutDuration = time.Second * 5
 )
 
 type Post struct {
@@ -34,6 +36,9 @@ func (s *PostsStore) Create(ctx context.Context, p *Post) error {
 	INSERT INTO posts(content, title, user_id, tags)
 	VALUES ($1, $2, $3, $4) RETURNING id, creation_date, update_date
 	`
+
+	ctx,Cancel := context.WithTimeout(ctx, timeOutDuration)
+	defer Cancel()
 
 	err := s.db.QueryRowContext(
 		ctx,
@@ -62,6 +67,10 @@ func (s *PostsStore) GetPostById(ctx context.Context, postID int64) (*Post, erro
 	FROM posts 
 	WHERE id = $1;
 	`
+
+	ctx,Cancel := context.WithTimeout(ctx, timeOutDuration)
+	defer Cancel()
+
 	p := &Post{
 		ID: postID,
 	}
@@ -96,6 +105,8 @@ func (s *PostsStore) DeletePostById(ctx context.Context, postID int64) error {
 	DELETE FROM posts 
 	WHERE id = $1;
 	`
+	ctx,Cancel := context.WithTimeout(ctx, timeOutDuration)
+	defer Cancel()
 
 	result, err := s.db.ExecContext(
 		ctx,
@@ -128,6 +139,9 @@ func (s *PostsStore) UpdatePostById(ctx context.Context, post *Post) error {
 	WHERE id = $3 AND version = $4
 	RETURNING version;`
 
+	ctx,Cancel := context.WithTimeout(ctx, timeOutDuration)
+	defer Cancel()
+	
 	err := s.db.QueryRowContext(
 		ctx,
 		query,
