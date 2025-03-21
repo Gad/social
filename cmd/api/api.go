@@ -54,6 +54,15 @@ func (app *application) mnt_mux() *chi.Mux {
 			
 				})
 		})
+		m.Route("/users", func(m chi.Router){
+			//m.Post("/", app.createPostHandler)
+		    m.Route("/{userid}", func(m chi.Router){
+				m.Use(app.userToContextMiddleware)
+				m.Get("/", app.getUserHandler)
+				
+			
+				})
+		})
 		
 	})
 
