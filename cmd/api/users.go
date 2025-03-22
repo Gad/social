@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	"errors"
-	
+
+
 	"net/http"
 	"strconv"
 
@@ -14,6 +15,11 @@ import (
 
 const userKey Key = "user"
 
+type FollowingUser struct{
+	UserID int64 `json:"user_id"`
+}
+
+
 
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -21,11 +27,67 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := app.jsonResponse(w, http.StatusOK, &user); err != nil {
 		app.internalServerErrorResponse(w, r, err)
-		return
+		return 
 	}
 	
 
 }
+
+
+func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request){
+
+	followedUser := getUserFromCtx(r)
+
+	var follower FollowingUser
+
+	if err:=readJson(app, w, r, &follower); err!=nil {
+		app.badRequestResponse(w, r, err, true)
+		return
+	}
+
+	if err:= app.store.Users.Follow(r.Context(), followedUser.ID, follower.UserID); err!= nil {
+		
+		app.badRequestResponse(w,r,err, true)
+
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+	/*if err := app.jsonResponse(w, http.StatusNoContent, ""); err != nil {
+		app.internalServerErrorResponse(w, r, err)
+		return 
+	}*/
+
+
+
+
+}
+
+
+func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request){
+
+	followedUser := getUserFromCtx(r)
+
+	var follower FollowingUser
+
+	if err:=readJson(app, w, r, &follower); err!=nil {
+		app.badRequestResponse(w, r, err, true)
+		return
+	}
+
+	if err:= app.store.Users.Unfollow(r.Context(), followedUser.ID, follower.UserID); err!= nil {
+		app.internalServerErrorResponse(w,r,err)
+
+	}
+	w.WriteHeader(http.StatusNoContent)
+
+	/*if err := app.jsonResponse(w, http.StatusNoContent, ""); err != nil {
+		app.internalServerErrorResponse(w, r, err)
+		return 
+	}*/
+
+}
+
+
 
 func getUserFromCtx(r *http.Request) *store.User {
 

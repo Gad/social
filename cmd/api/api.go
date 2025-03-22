@@ -59,7 +59,8 @@ func (app *application) mnt_mux() *chi.Mux {
 		    m.Route("/{userid}", func(m chi.Router){
 				m.Use(app.userToContextMiddleware)
 				m.Get("/", app.getUserHandler)
-				
+				m.Put("/follow", app.followUserHandler)
+				m.Put("/unfollow", app.unfollowUserHandler)
 			
 				})
 		})

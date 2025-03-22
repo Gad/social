@@ -4,16 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"time"
+	
 
 	"github.com/lib/pq"
 )
 
-var (
-	ErrorNotFound      = errors.New("record not found")
-	ErrorDeleteTooMany = errors.New("expected to affect 1 row, affected more")
-	timeOutDuration = time.Second * 5
-)
+
 
 type Post struct {
 	ID           int64     `json:"id"`

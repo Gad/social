@@ -3,6 +3,15 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"time"
+)
+
+var (
+	ErrorNotFound      = errors.New("record not found")
+	ErrorDeleteTooMany = errors.New("expected to affect 1 row, affected more")
+	timeOutDuration = time.Second * 5
+	ErrorDuplicateKey = errors.New("duplicate key violates sql unique constraint")
 )
 
 type Storage struct {
@@ -17,6 +26,8 @@ type Storage struct {
 	Users interface {
 		Create(context.Context, *User) error
 		GetUserById(context.Context, int64) (*User, error)
+		Follow(context.Context,  int64,  int64) error
+		Unfollow( context.Context,  int64, int64) error
 	}
 
 	Comments interface{
