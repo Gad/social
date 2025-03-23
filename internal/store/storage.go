@@ -34,6 +34,10 @@ type Storage struct {
 		GetCommentsByPostId (context.Context, int64) (*[]Comment, error)
 		Create (context.Context, *Comment) error 
 	}
+
+	Feeds interface{
+		GetUserDefaultFeed(context.Context, int64) ([]PostWtMetadata, error)
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {
@@ -41,5 +45,6 @@ func NewStorage(db *sql.DB) Storage {
 		Posts: &PostsStore{db},
 		Users: &UsersStore{db},
 		Comments: &CommentsStore{db},
+		Feeds : &FeedsStore{db},
 	}
 }

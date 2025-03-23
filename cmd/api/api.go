@@ -16,11 +16,11 @@ type application struct {
 }
 
 type config struct {
-	addr string
-	db   dbConfig
-	env	string
+	addr    string
+	db      dbConfig
+	env     string
 	version string
-	maxByte int64 // max size for incoming http body to mitigate DDOS 
+	maxByte int64 // max size for incoming http body to mitigate DDOS
 }
 
 type dbConfig struct {
@@ -29,8 +29,6 @@ type dbConfig struct {
 	maxIdleConns int
 	maxIdleTime  string
 }
-
-
 
 func (app *application) mnt_mux() *chi.Mux {
 
@@ -44,27 +42,31 @@ func (app *application) mnt_mux() *chi.Mux {
 
 	mux.Route("/v1", func(m chi.Router) {
 		m.Get("/health", app.getHealthHandler)
-		m.Route("/posts", func(m chi.Router){
+		m.Route("/posts", func(m chi.Router) {
 			m.Post("/", app.createPostHandler)
-		    m.Route("/{postid}", func(m chi.Router){
+			m.Route("/{postid}", func(m chi.Router) {
 				m.Use(app.postToContextMiddleware)
 				m.Get("/", app.getPostHandler)
 				m.Delete("/", app.deletePostHandler)
 				m.Patch("/", app.patchPostHandler)
-			
-				})
+
+			})
 		})
-		m.Route("/users", func(m chi.Router){
+		m.Route("/users", func(m chi.Router) {
 			//m.Post("/", app.createPostHandler)
-		    m.Route("/{userid}", func(m chi.Router){
+			m.Route("/{userid}", func(m chi.Router) {
 				m.Use(app.userToContextMiddleware)
 				m.Get("/", app.getUserHandler)
 				m.Put("/follow", app.followUserHandler)
 				m.Put("/unfollow", app.unfollowUserHandler)
-			
-				})
+
+			})
+			m.Group(func (m chi.Router)  {
+				m.Get("/feed", app.getUserFeedHandler)
+				
+			})
 		})
-		
+
 	})
 
 	return mux

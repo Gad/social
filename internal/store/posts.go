@@ -4,12 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	
 
 	"github.com/lib/pq"
 )
-
-
 
 type Post struct {
 	ID           int64     `json:"id"`
@@ -21,7 +18,9 @@ type Post struct {
 	CreationDate string    `json:"creation_date"`
 	UpdateDate   string    `json:"update_date"`
 	Comments     []Comment `json:"comments"`
+	User         User      `json:"user"`
 }
+
 
 type PostsStore struct {
 	db *sql.DB
@@ -33,7 +32,7 @@ func (s *PostsStore) Create(ctx context.Context, p *Post) error {
 	VALUES ($1, $2, $3, $4) RETURNING id, creation_date, update_date
 	`
 
-	ctx,Cancel := context.WithTimeout(ctx, timeOutDuration)
+	ctx, Cancel := context.WithTimeout(ctx, timeOutDuration)
 	defer Cancel()
 
 	err := s.db.QueryRowContext(
@@ -64,7 +63,7 @@ func (s *PostsStore) GetPostById(ctx context.Context, postID int64) (*Post, erro
 	WHERE id = $1;
 	`
 
-	ctx,Cancel := context.WithTimeout(ctx, timeOutDuration)
+	ctx, Cancel := context.WithTimeout(ctx, timeOutDuration)
 	defer Cancel()
 
 	p := &Post{
@@ -101,7 +100,7 @@ func (s *PostsStore) DeletePostById(ctx context.Context, postID int64) error {
 	DELETE FROM posts 
 	WHERE id = $1;
 	`
-	ctx,Cancel := context.WithTimeout(ctx, timeOutDuration)
+	ctx, Cancel := context.WithTimeout(ctx, timeOutDuration)
 	defer Cancel()
 
 	result, err := s.db.ExecContext(
@@ -135,9 +134,9 @@ func (s *PostsStore) UpdatePostById(ctx context.Context, post *Post) error {
 	WHERE id = $3 AND version = $4
 	RETURNING version;`
 
-	ctx,Cancel := context.WithTimeout(ctx, timeOutDuration)
+	ctx, Cancel := context.WithTimeout(ctx, timeOutDuration)
 	defer Cancel()
-	
+
 	err := s.db.QueryRowContext(
 		ctx,
 		query,
