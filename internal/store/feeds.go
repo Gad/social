@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	
 
 	"github.com/lib/pq"
 )
@@ -18,10 +20,15 @@ type PostWtMetadata struct{
 
 }
 
+type FeedPaginationQuery struct {
+	Limit  int    `json:"limit" validate:"gte=1,lte=20"`
+	Offset int    `json:"offset" validate:"gte=0"`
+	Sort   string `json:"sort" validate:"oneof=asc desc"`
+}
 
-func (s *FeedsStore) GetUserDefaultFeed(ctx context.Context, userId int64) ([]PostWtMetadata, error){
+func (s *FeedsStore) GetUserDefaultFeed(ctx context.Context, userId int64, fpq FeedPaginationQuery) ([]PostWtMetadata, error){
 
-	query := `select 
+	queryString := `select 
 		p.id, p.user_id, p.title, p.content, p.creation_date, p.version, p.tags,
 		u.username, 
 		count(c.id) as comments_count
@@ -33,12 +40,16 @@ func (s *FeedsStore) GetUserDefaultFeed(ctx context.Context, userId int64) ([]Po
 		SELECT p.id, p.user_id, p.title, p.content, p.creation_date, p.version, p.tags
 		FROM posts p
 		JOIN followers f ON p.user_id = f.user_id
-		WHERE f.follower_id = $1
-		ORDER BY creation_date  
+		WHERE f.follower_id = $1		
 	) as p
 	left join comments c on c.post_id = p.id
 	left join users u on p.user_id = u.id
-	group by p.id, p.user_id, p.title, p.content, p.creation_date, p.version, p.tags, u.username `
+	group by p.id, p.user_id, p.title, p.content, p.creation_date, p.version, p.tags, u.username 
+	ORDER BY creation_date %s
+	limit $2 offset $3
+	`
+	query := fmt.Sprintf(queryString, fpq.Sort)
+	
 
 	ctx, Cancel := context.WithTimeout(ctx, timeOutDuration)
 	defer Cancel()
@@ -47,6 +58,9 @@ func (s *FeedsStore) GetUserDefaultFeed(ctx context.Context, userId int64) ([]Po
 		ctx,
 		query,
 		userId,
+		fpq.Limit,
+		fpq.Offset,
+		
 	)
 
 	if err != nil {

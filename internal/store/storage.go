@@ -36,7 +36,7 @@ type Storage struct {
 	}
 
 	Feeds interface{
-		GetUserDefaultFeed(context.Context, int64) ([]PostWtMetadata, error)
+		GetUserDefaultFeed(context.Context, int64, FeedPaginationQuery) ([]PostWtMetadata, error)
 	}
 }
 
