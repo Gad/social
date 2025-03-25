@@ -1,9 +1,14 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"net/http"
 )
+
+var ErrDateFormat = errors.New("Incorrect Date Format")
+
+
 
 func (app *application) internalServerErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
 
