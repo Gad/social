@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"log"
 	"net/http"
 )
 
@@ -12,15 +11,15 @@ var ErrDateFormat = errors.New("incorrect date format")
 
 func (app *application) internalServerErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
 
-
-	log.Printf("Internal Server Error: method: %s - path: %s - internal error: %s", r.Method, r.URL.Path, err.Error())
+	app.logger.Errorw("Internal Server Error","method",r.Method, "path", r.URL.Path, "error", err.Error())
 	writeJsonError(w, http.StatusInternalServerError, "internal server error")
 
 }
 
 func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Request, err error, showError bool) {
 
-	log.Printf("Bad Request Error: method: %s - path: %s - internal error: %s", r.Method, r.URL.Path, err.Error())
+	app.logger.Warnw("Bad Request Error","method",r.Method, "path", r.URL.Path, "error", err.Error())
+
 	var msg string
 	if showError {
 		msg = err.Error()
@@ -32,13 +31,12 @@ func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request, err error) {
-
-	log.Printf("Not Found Error: method: %s - path: %s - internal error: %s", r.Method, r.URL.Path, err.Error())
+	app.logger.Warnw("Not Found Error","method",r.Method, "path", r.URL.Path, "error", err.Error())
 	writeJsonError(w, http.StatusNotFound, "ressource not found")
 }
 
 func (app *application) conflictResponse(w http.ResponseWriter, r *http.Request, err error) {
 
-	log.Printf("Database conflict error : method: %s - path: %s - internal error: %s", r.Method, r.URL.Path, err.Error())
+	app.logger.Errorw("Database conflict error","method",r.Method, "path", r.URL.Path, "error", err.Error())
 	writeJsonError(w, http.StatusConflict, "database conflict")
 }

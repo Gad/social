@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"database/sql"
-	"log"
 	"time"
 
 	"github.com/gad/social/internal/env"
@@ -26,8 +25,6 @@ func New(addr string, maxOpenConns, maxIdleConns int, maxIdleTime string) (*sql.
 	if err = db.PingContext(ctx); err != nil {
 		return nil, err
 	}
-
-	log.Println("Connection with database established")
-
+	
 	return db, nil
 }

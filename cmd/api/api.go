@@ -2,25 +2,26 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
+	"github.com/gad/social/docs"
 	"github.com/gad/social/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
-	"github.com/gad/social/docs"
+	"go.uber.org/zap"
 )
 
 type application struct {
 	config config
 	store  store.Storage
+	logger *zap.SugaredLogger
 }
 
 type config struct {
 	addr    string
-	apiURL	string
+	apiURL  string
 	db      dbConfig
 	env     string
 	version string
@@ -84,7 +85,6 @@ func (app *application) run_app(mux http.Handler) error {
 
 	docs.SwaggerInfo.Version = app.config.version
 	docs.SwaggerInfo.Host = app.config.apiURL
-	
 
 	srv := &http.Server{
 		Addr:         app.config.addr,
@@ -93,7 +93,7 @@ func (app *application) run_app(mux http.Handler) error {
 		ReadTimeout:  time.Second * 10,
 		IdleTimeout:  time.Second * 60,
 	}
-	log.Printf("Starting HTTP server at %s \n", app.config.addr)
+	app.logger.Infof("Starting HTTP server at %s", app.config.addr)
 
 	return srv.ListenAndServe()
 

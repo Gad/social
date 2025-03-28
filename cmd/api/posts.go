@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -50,7 +49,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	log.Println("Payload : ", payload)
+	
 	userId := 27
 	p := &store.Post{
 		Content: payload.Content,
@@ -59,7 +58,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		UserID:  int64(userId),
 	}
 
-	log.Printf("Complete payload : %v", payload)
+	
 
 	ctx := r.Context()
 
