@@ -1,5 +1,7 @@
 # ignore ALL .log files
 *.log
-
+# Ignore .envrc (direnv environment file)
+.envrc
 # ignore bin dir
 bin/
+docs/

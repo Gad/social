@@ -16,3 +16,7 @@ migrate-down:
 .PHONY: seeding
 seeding:
 	@go run cmd/migrate/seed/main.go
+
+.PHONY: gen-docs
+gen-docs:
+	@swag init -g main.go -d cmd/api && swag fmt

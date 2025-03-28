@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -8,6 +9,8 @@ import (
 	"github.com/gad/social/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
+	"github.com/gad/social/docs"
 )
 
 type application struct {
@@ -17,6 +20,7 @@ type application struct {
 
 type config struct {
 	addr    string
+	apiURL	string
 	db      dbConfig
 	env     string
 	version string
@@ -42,6 +46,9 @@ func (app *application) mnt_mux() *chi.Mux {
 
 	mux.Route("/v1", func(m chi.Router) {
 		m.Get("/health", app.getHealthHandler)
+
+		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
+		m.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 		m.Route("/posts", func(m chi.Router) {
 			m.Post("/", app.createPostHandler)
 			m.Route("/{postid}", func(m chi.Router) {
@@ -61,9 +68,9 @@ func (app *application) mnt_mux() *chi.Mux {
 				m.Put("/unfollow", app.unfollowUserHandler)
 
 			})
-			m.Group(func (m chi.Router)  {
+			m.Group(func(m chi.Router) {
 				m.Get("/feed", app.getUserFeedHandler)
-				
+
 			})
 		})
 
@@ -74,6 +81,10 @@ func (app *application) mnt_mux() *chi.Mux {
 }
 
 func (app *application) run_app(mux http.Handler) error {
+
+	docs.SwaggerInfo.Version = app.config.version
+	docs.SwaggerInfo.Host = app.config.apiURL
+	
 
 	srv := &http.Server{
 		Addr:         app.config.addr,
