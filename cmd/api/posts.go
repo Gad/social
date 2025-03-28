@@ -21,13 +21,27 @@ type postPayload struct {
 	Tags    []string `json:"tags"`
 }
 
+// CreatePost godoc
+//
+//	@Summary		Creates a post
+//	@Description	Creates a post
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			payload	body		postPayload	true	"Post payload"
+//	@Success		202		{object}	store.Post
+//	@Failure		400		{object}	error
+//	@Failure		401		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/posts [post]
 func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO - mock user until auth is implemented
 
 	var payload postPayload
 
 	if err := readJson(app, w, r, &payload); err != nil {
-		writeJsonError(w, http.StatusInternalServerError, err.Error())
+		app.internalServerErrorResponse(w, r, err)
 		return
 	}
 
@@ -37,7 +51,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	log.Println("Payload : ", payload)
-	userId := 1
+	userId := 27
 	p := &store.Post{
 		Content: payload.Content,
 		Title:   payload.Title,
@@ -60,7 +74,19 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	}
 
 }
-
+// GetPost godoc
+//
+//	@Summary		Fetches a post
+//	@Description	Fetches a post by ID
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"Post ID"
+//	@Success		200	{object}	store.Post
+//	@Failure		404	{object}	error
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/posts/{id} [get]
 func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	post := getPostFromCtx(r)
@@ -79,10 +105,22 @@ func (app *application) getPostHandler(w http.ResponseWriter, r *http.Request) {
 		app.internalServerErrorResponse(w, r, err)
 		return
 	}
-	
 
 }
 
+// DeletePost godoc
+//
+//	@Summary		Deletes a post
+//	@Description	Delete a post by ID
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"Post ID"
+//	@Success		204	{object}	string
+//	@Failure		404	{object}	error
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/posts/{id} [delete]
 func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request) {
 	ID, err := strconv.Atoi(chi.URLParam(r, "postid"))
 	if err != nil {
@@ -105,16 +143,31 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	app.jsonResponse(w, http.StatusOK, nil)
-	
-
+	app.jsonResponse(w, http.StatusNoContent, nil)
 }
+
 
 type updatePostPayload struct {
 	Title   *string `json:"title" validate:"omitempty,max=100"`
 	Content *string `json:"content" validate:"omitempty,max=100"`
 }
-
+// UpdatePost godoc
+//
+//	@Summary		Updates a post
+//	@Description	Updates a post by ID
+//	@Tags			posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		int					true	"Post ID"
+//	@Param			payload	body		updatePostPayload	true	"Post payload"
+//	@Success		200		{object}	store.Post
+//	@Failure		400		{object}	error
+//	@Failure		401		{object}	error
+//	@Failure		404		{object}	error
+//	@Failure		409		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/posts/{id} [patch]
 func (app *application) patchPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	post := getPostFromCtx(r)
@@ -148,14 +201,13 @@ func (app *application) patchPostHandler(w http.ResponseWriter, r *http.Request)
 
 		}
 		return
-	
+
 	}
 
 	if err := app.jsonResponse(w, http.StatusOK, &post); err != nil {
 		app.internalServerErrorResponse(w, r, err)
 		return
 	}
-	
 
 }
 

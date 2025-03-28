@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-
 	"net/http"
 	"strconv"
 
@@ -12,82 +11,113 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-
 const userKey Key = "user"
 
-type FollowingUser struct{
+type FollowingUser struct {
 	UserID int64 `json:"user_id"`
 }
 
-
-
+// GetUser godoc
+//
+//	@Summary		Fetches a user profile
+//	@Description	Fetches a user profile by ID
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"User ID"
+//	@Success		200	{object}	store.User
+//	@Failure		400	{object}	error
+//	@Failure		404	{object}	error
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/users/{id}	[get]
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	user := getUserFromCtx(r)
 
 	if err := app.jsonResponse(w, http.StatusOK, &user); err != nil {
 		app.internalServerErrorResponse(w, r, err)
-		return 
+		return
 	}
-	
 
 }
 
-
-func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request){
+// FollowUser godoc
+//
+//	@Summary		authenticated user follows another user
+//	@Description	follow a user profile by ID
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"User ID"
+//	@Success		204	{object}	store.User
+//	@Failure		400	{object}	error
+//	@Failure		404	{object}	error
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/users/{id}/follow  [put]
+func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	followedUser := getUserFromCtx(r)
 
 	var follower FollowingUser
 
-	if err:=readJson(app, w, r, &follower); err!=nil {
+	if err := readJson(app, w, r, &follower); err != nil {
 		app.badRequestResponse(w, r, err, true)
 		return
 	}
 
-	if err:= app.store.Users.Follow(r.Context(), followedUser.ID, follower.UserID); err!= nil {
-		
-		app.badRequestResponse(w,r,err, true)
+	if err := app.store.Users.Follow(r.Context(), followedUser.ID, follower.UserID); err != nil {
+
+		app.badRequestResponse(w, r, err, true)
 
 	}
 
 	w.WriteHeader(http.StatusNoContent)
 	/*if err := app.jsonResponse(w, http.StatusNoContent, ""); err != nil {
 		app.internalServerErrorResponse(w, r, err)
-		return 
+		return
 	}*/
-
-
-
 
 }
 
-
-func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request){
+// UnfollowUser godoc
+//
+//	@Summary		authenticated user unfollows another user
+//	@Description	follow a user profile by ID
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"User ID"
+//	@Success		204	{object}	store.User
+//	@Failure		400	{object}	error	"malformed request"
+//	@Failure		404	{object}	error	"User not found"
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/users/{id}/unfollow  [put]
+func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	followedUser := getUserFromCtx(r)
 
 	var follower FollowingUser
 
-	if err:=readJson(app, w, r, &follower); err!=nil {
+	if err := readJson(app, w, r, &follower); err != nil {
 		app.badRequestResponse(w, r, err, true)
 		return
 	}
 
-	if err:= app.store.Users.Unfollow(r.Context(), followedUser.ID, follower.UserID); err!= nil {
-		app.internalServerErrorResponse(w,r,err)
+	if err := app.store.Users.Unfollow(r.Context(), followedUser.ID, follower.UserID); err != nil {
+		app.internalServerErrorResponse(w, r, err)
 
 	}
 	w.WriteHeader(http.StatusNoContent)
 
 	/*if err := app.jsonResponse(w, http.StatusNoContent, ""); err != nil {
 		app.internalServerErrorResponse(w, r, err)
-		return 
+		return
 	}*/
 
 }
-
-
 
 func getUserFromCtx(r *http.Request) *store.User {
 
@@ -96,7 +126,7 @@ func getUserFromCtx(r *http.Request) *store.User {
 }
 func (app *application) userToContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		
+
 		ID, err := strconv.Atoi(chi.URLParam(r, "userid"))
 		if err != nil {
 
@@ -124,6 +154,4 @@ func (app *application) userToContextMiddleware(next http.Handler) http.Handler 
 
 	})
 
-	
 }
-

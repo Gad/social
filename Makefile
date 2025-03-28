@@ -19,4 +19,4 @@ seeding:
 
 .PHONY: gen-docs
 gen-docs:
-	@swag init -g main.go -d cmd/api && swag fmt
+	@swag init -g main.go -d cmd/api,internal/store && swag fmt

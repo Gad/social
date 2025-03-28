@@ -2,6 +2,8 @@
 *.log
 # Ignore .envrc (direnv environment file)
 .envrc
+# VSCode stuff
+settings.json
 # ignore bin dir
 bin/
 docs/

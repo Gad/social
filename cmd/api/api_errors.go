@@ -6,11 +6,12 @@ import (
 	"net/http"
 )
 
-var ErrDateFormat = errors.New("Incorrect Date Format")
+var ErrDateFormat = errors.New("incorrect date format")
 
 
 
 func (app *application) internalServerErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
+
 
 	log.Printf("Internal Server Error: method: %s - path: %s - internal error: %s", r.Method, r.URL.Path, err.Error())
 	writeJsonError(w, http.StatusInternalServerError, "internal server error")
