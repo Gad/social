@@ -40,13 +40,10 @@ func main() {
 		maxByte: int64(env.GetInt("MAX_BYTES", 1_048_578)),
 	}
 
-	dev := false
-	if cfg.env == "DEVELOPMENT" {
-		dev = true
-	}
+	
 	
 	// logger setup
-	lg := createLogger(dev)
+	lg := createLogger(cfg.env)
 
 	defer lg.Sync()
 	logger := lg.Sugar()

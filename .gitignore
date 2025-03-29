@@ -1,5 +1,6 @@
 # ignore ALL .log files
 *.log
+logs/
 # Ignore .envrc (direnv environment file)
 .envrc
 # VSCode stuff
