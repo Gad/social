@@ -28,7 +28,10 @@ type Storage struct {
 		GetUserById(context.Context, int64) (*User, error)
 		Follow(context.Context,  int64,  int64) error
 		Unfollow( context.Context,  int64, int64) error
+		RegisterNew(context.Context, *User, string) error
 	}
+
+	
 
 	Comments interface{
 		GetCommentsByPostId (context.Context, int64) (*[]Comment, error)

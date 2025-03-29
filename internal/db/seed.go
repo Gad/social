@@ -478,8 +478,9 @@ func generateUsers(numUsers int) []*store.User {
 		users[i] = &store.User{
 			Username: name,
 			Email:    fmt.Sprintf("%s@example.com", name),
-			Password: "123",
+			
 		}
+		_ = users[i].Password.Set(name)
 	}
 
 	return users

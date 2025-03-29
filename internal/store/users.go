@@ -4,17 +4,33 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	
 
 	"github.com/lib/pq"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
 	ID           int64  `json:"id"`
 	Username     string `json:"username"`
 	Email        string `json:"email"`
-	Password     string `json:"-"`
+	Password     password `json:"-"`
 	CreationDate string `json:"creation_date"`
+}
+
+type password struct {
+	plainText *string
+	hash      []byte
+}
+
+func (p *password) Set(plaintext string) error {
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(plaintext), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	p.hash = hash
+	p.plainText = &plaintext
+	return nil
 }
 
 type UsersStore struct {
@@ -46,9 +62,6 @@ func (s *UsersStore) Create(ctx context.Context, u *User) error {
 
 }
 
-
-
-
 func (s *UsersStore) Follow(ctx context.Context, followedID int64, followerID int64) error {
 	query := `
 	INSERT INTO followers(user_id, follower_id)
@@ -64,7 +77,7 @@ func (s *UsersStore) Follow(ctx context.Context, followedID int64, followerID in
 		followerID,
 	)
 
-	if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Name()=="unique_violation"{
+	if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Name() == "unique_violation" {
 		return ErrorDuplicateKey
 	}
 
@@ -123,4 +136,8 @@ func (s *UsersStore) GetUserById(ctx context.Context, userID int64) (*User, erro
 		}
 	}
 	return u, nil
+}
+
+func (s *UsersStore) RegisterNew(ctx context.Context, user *User, token string) error {
+	return nil
 }
