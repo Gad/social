@@ -22,7 +22,7 @@ func main(){
 	
 	store := store.NewStorage(conn)
 
-	db.Seed(store, 50,100,50)
+	db.Seed(store, 50,100,50, conn)
 
 
 }

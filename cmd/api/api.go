@@ -79,6 +79,9 @@ func (app *application) mnt_mux() *chi.Mux {
 
 			})
 		})
+		m.Route("/authentication", func(m chi.Router){
+			m.Post("/user", app.registerUserHandler)
+		})
 
 	})
 
