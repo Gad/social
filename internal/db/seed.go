@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"math/rand"
@@ -440,12 +441,13 @@ func Seed(store store.Storage, numUsers int, numPosts int, numComments int)  {
 	users := generateUsers(numUsers)
 
 	ctx := context.Background()
-	for i := range numUsers {
+	// TODO : needs repair after adding transaction to store.Users.Create signature ...
+	/*for i := range numUsers {
 		if err := store.Users.Create(ctx, users[i]); err != nil {
 			log.Fatal(err)
 		}
 
-	}
+	}*/
 	// seed posts
 	posts := generatePosts(numPosts, users)
 

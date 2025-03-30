@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/gad/social/internal/db"
 	"github.com/gad/social/internal/env"
 	"github.com/gad/social/internal/store"
@@ -38,10 +40,11 @@ func main() {
 		env:     env.GetString("ENV", "DEVELOPMENT"),
 		version: env.GetString("VERSION", "0.0.2"),
 		maxByte: int64(env.GetInt("MAX_BYTES", 1_048_578)),
+		mail: mailConfig{
+			exp: time.Hour * 24 * 3,
+		},
 	}
 
-	
-	
 	// logger setup
 	lg := createLogger(cfg.env)
 
@@ -49,7 +52,6 @@ func main() {
 	logger := lg.Sugar()
 	logger.Infow("Starting GopherSocial", "version", cfg.version, "Env", cfg.env)
 
-	
 	// Database setup
 	db, err := db.New(
 		cfg.db.addr,

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 
 	"github.com/gad/social/internal/store"
@@ -49,18 +51,30 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	token, err := uuid.NewV4()
+	plainToken, err := uuid.NewV4()
 	if err != nil {
 		app.internalServerErrorResponse(w, r, err)
 		return
 	}
+	
 
-	tokenS := token.String()
-	if err := app.store.Users.RegisterNew(r.Context(), user, tokenS); err != nil {
-		// TODO : need to refine error
-		app.internalServerErrorResponse(w, r, err)
+	plainTokenS := plainToken.String()
+	hash:= sha256.Sum256([]byte(plainTokenS))
+	hashToken := hex.EncodeToString(hash[:])
+	err = app.store.Users.RegisterNew(r.Context(), user, hashToken, app.config.mail.exp)
+	if err != nil {
+		switch err {
+		case store.ErrorDuplicateEmail:
+			app.badRequestResponse(w, r, err, true)
+		case store.ErrorDuplicateµUsername:
+			app.badRequestResponse(w, r, err, true)
+		default:
+			app.internalServerErrorResponse(w, r, err)
+		}
 		return
 	}
+
+	// TODO : implement mail
 
 	if err := app.jsonResponse(w, http.StatusCreated, nil); err != nil {
 		app.internalServerErrorResponse(w, r, err)

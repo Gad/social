@@ -26,6 +26,11 @@ type config struct {
 	env     string
 	version string
 	maxByte int64 // max size for incoming http body to mitigate DDOS
+	mail mailConfig
+}
+
+type mailConfig struct{
+	exp time.Duration
 }
 
 type dbConfig struct {
