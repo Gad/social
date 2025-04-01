@@ -23,7 +23,7 @@ type RegisterUserPayload struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			payload	body		RegisterUserPayload	true	"User credentials"
-//	@Success		201		{object}	UserWithToken		"User registered"
+//	@Success		201		{object}	store.User			"User registered"
 //	@Failure		400		{object}	error
 //	@Failure		500		{object}	error
 //	@Router			/authentication/user [post]
@@ -59,8 +59,10 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	
 
 	plainTokenS := plainToken.String()
+	app.logger.Debugf("plain token of newly created %s", plainTokenS)
 	hash:= sha256.Sum256([]byte(plainTokenS))
 	hashToken := hex.EncodeToString(hash[:])
+
 	err = app.store.Users.RegisterNew(r.Context(), user, hashToken, app.config.mail.exp)
 	if err != nil {
 		switch err {
@@ -80,3 +82,5 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		app.internalServerErrorResponse(w, r, err)
 	}
 }
+
+

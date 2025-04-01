@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"log"
 
 	"net/http"
 	"strconv"
@@ -110,12 +111,11 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 		app.internalServerErrorResponse(w, r, err)
 
 	}
-	w.WriteHeader(http.StatusNoContent)
 
-	/*if err := app.jsonResponse(w, http.StatusNoContent, ""); err != nil {
+	if err := app.jsonResponse(w, http.StatusNoContent, ""); err != nil {
 		app.internalServerErrorResponse(w, r, err)
 		return
-	}*/
+	}
 
 }
 
@@ -156,3 +156,37 @@ func (app *application) userToContextMiddleware(next http.Handler) http.Handler 
 
 }
 
+// ActivateUser godoc
+//
+//	@Summary		Activate a user
+//	@Description	Activate a user given a token
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			token	path		string	true	"Invitation token"
+//	@Success		202		{string}	string	"user activated"
+//	@Failure		400		{object}	error	"malformed request"
+//	@Failure		404		{object}	error	"token not found"
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/users/activate/{token}  [put]
+func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Request) {
+	token := chi.URLParam(r, "token")
+
+	err := app.store.Users.Activate(r.Context(), token)
+	if err != nil {
+		switch err {
+		case store.ErrorNotFound:
+			app.notFoundResponse(w, r, err)
+
+		default:
+			app.internalServerErrorResponse(w, r, err)
+		}
+		return
+	}
+	if err := app.jsonResponse(w, http.StatusAccepted, nil); err != nil {
+		app.internalServerErrorResponse(w, r, err)
+		return
+	}
+
+}

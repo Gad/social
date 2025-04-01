@@ -29,6 +29,7 @@ type Storage struct {
 		Follow(context.Context, int64, int64) error
 		Unfollow(context.Context, int64, int64) error
 		RegisterNew(context.Context, *User, string, time.Duration) error
+		Activate(context.Context, string) error
 	}
 
 	Comments interface {

@@ -2,7 +2,9 @@ package store
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"strings"
 	"time"
@@ -14,13 +16,13 @@ import (
 var ErrorDuplicateEmail = errors.New("duplicate email address")
 var ErrorDuplicateµUsername = errors.New("duplicate username")
 
-
 type User struct {
 	ID           int64    `json:"id"`
 	Username     string   `json:"username"`
 	Email        string   `json:"email"`
 	Password     password `json:"-"`
 	CreationDate string   `json:"creation_date"`
+	Activated    bool     `json:"activated"`
 }
 
 type password struct {
@@ -45,31 +47,31 @@ type UsersStore struct {
 
 func (s *UsersStore) Create(ctx context.Context, tx *sql.Tx, u *User) error {
 	query := `
-	INSERT INTO users(username, email, password)
-	VALUES ($1, $2, $3) RETURNING id, creation_date
+	INSERT INTO users(email,username, password)
+	VALUES ($1, $2, $3) RETURNING id, creation_date;
 	`
 
 	err := s.db.QueryRowContext(
 		ctx,
 		query,
-		u.Username,
 		u.Email,
-		u.Password,
+		u.Username,
+		u.Password.hash,
 	).Scan(
 		&u.ID,
 		&u.CreationDate,
 	)
 
 	if err != nil {
-		switch{
-		case strings.Contains(err.Error(),"violates unique constraints") &&  strings.Contains(err.Error(),"users_email_key"):
+		switch {
+		case strings.Contains(err.Error(), "violates unique constraints") && strings.Contains(err.Error(), "users_email_key"):
 			return ErrorDuplicateEmail
 		case err.Error() == `pq: duplicate key value violates unique constraints "users_username_key"`:
 			return ErrorDuplicateµUsername
 		default:
 			return err
 		}
-		
+
 	}
 
 	return nil
@@ -137,7 +139,7 @@ func (s *UsersStore) GetUserById(ctx context.Context, userID int64) (*User, erro
 	).Scan(
 		&u.Username,
 		&u.Email,
-		&u.Password,
+		&u.Password.hash,
 		&u.CreationDate,
 	)
 
@@ -159,7 +161,7 @@ func (s *UsersStore) RegisterNew(ctx context.Context, user *User, token string, 
 		// 2- create the user
 		if err := s.Create(ctx, tx, user); err != nil {
 			return err
-		} 
+		}
 		// 3- create the user invite
 		if err := s.createUserInvitation(ctx, tx, token, user.ID, invitationExp); err != nil {
 			return err
@@ -169,15 +171,77 @@ func (s *UsersStore) RegisterNew(ctx context.Context, user *User, token string, 
 
 }
 
-func (s *UsersStore) createUserInvitation(ctx context.Context, tx *sql.Tx, token string, userID int64, invitationExp time.Duration) error{
-	query := `ÌNSERT INTO user_invitations (token, user_id, expiry) VALUES ($1, $2, $3)`
+func (s *UsersStore) createUserInvitation(ctx context.Context, tx *sql.Tx, token string, userID int64, invitationExp time.Duration) error {
+	query := `INSERT INTO user_invitations (token, user_id, expiry) VALUES ($1, $2, $3)`
 	ctx, cancel := context.WithTimeout(ctx, invitationExp)
 	defer cancel()
 
-
-	_, err := tx.ExecContext(ctx, query, token, userID, time.Now().Add(invitationExp) )
+	_, err := tx.ExecContext(ctx, query, token, userID, time.Now().Add(invitationExp))
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (s *UsersStore) Activate(ctx context.Context, token string) error {
+	return withTx(s.db, ctx, func(tx *sql.Tx) error {
+		// find user_id related to token
+		query := `
+	SELECT user_id 
+	FROM user_invitations 
+	WHERE token=$1 AND expiry > $2;
+	`
+
+		hash := sha256.Sum256([]byte(token))
+		hashToken := hex.EncodeToString(hash[:])
+
+		ctx, Cancel := context.WithTimeout(ctx, timeOutDuration)
+		defer Cancel()
+		var user_id int64
+
+		err := tx.QueryRowContext(
+			ctx,
+			query,
+			hashToken,
+			time.Now(),
+		).Scan(
+			&user_id,
+		)
+
+		if err != nil {
+			switch err {
+			case sql.ErrNoRows:
+				return ErrorNotFound
+			default:
+				return err
+			}
+		}
+	
+		// activate user in users table
+		query = `
+	UPDATE users 
+	SET activated=true 
+	WHERE id=$1;
+	`
+		
+
+		_, err = tx.ExecContext(ctx, query, user_id)
+		if err != nil {
+			return err
+		}
+		
+
+		// remove user invitation
+		query = `
+	DELETE FROM user_invitations 
+	WHERE user_id = $1;
+	`
+		
+
+		_, err = tx.ExecContext(ctx, query, user_id)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 }

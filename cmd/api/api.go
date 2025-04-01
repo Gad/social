@@ -66,6 +66,7 @@ func (app *application) mnt_mux() *chi.Mux {
 			})
 		})
 		m.Route("/users", func(m chi.Router) {
+			
 			//m.Post("/", app.createPostHandler)
 			m.Route("/{userid}", func(m chi.Router) {
 				m.Use(app.userToContextMiddleware)
@@ -74,6 +75,7 @@ func (app *application) mnt_mux() *chi.Mux {
 				m.Put("/unfollow", app.unfollowUserHandler)
 
 			})
+			m.Put("/activate/{token}", app.activateUserHandler)
 			m.Group(func(m chi.Router) {
 				m.Get("/feed", app.getUserFeedHandler)
 

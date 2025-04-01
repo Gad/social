@@ -10,7 +10,9 @@ func writeJson(w http.ResponseWriter, status int, data any) error {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
+
 	return json.NewEncoder(w).Encode(data)
+
 }
 
 func readJson(app *application, w http.ResponseWriter, r *http.Request, data any) error {
@@ -35,4 +37,5 @@ func (app *application) jsonResponse(w http.ResponseWriter, status int, data any
 	}
 
 	return writeJson(w, status, &enveloppe{Data: data})
+
 }
