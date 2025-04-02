@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"log"
 
 	"net/http"
 	"strconv"

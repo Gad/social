@@ -30,6 +30,7 @@ type Storage struct {
 		Unfollow(context.Context, int64, int64) error
 		RegisterNew(context.Context, *User, string, time.Duration) error
 		Activate(context.Context, string) error
+		DeleteInvitation(context.Context, int64, *sql.Tx) error
 	}
 
 	Comments interface {

@@ -186,62 +186,85 @@ func (s *UsersStore) createUserInvitation(ctx context.Context, tx *sql.Tx, token
 func (s *UsersStore) Activate(ctx context.Context, token string) error {
 	return withTx(s.db, ctx, func(tx *sql.Tx) error {
 		// find user_id related to token
-		query := `
+		ctx, Cancel := context.WithTimeout(ctx, timeOutDuration)
+		defer Cancel()
+
+		user_id, err := s.getUserByToken(ctx, tx, token)
+
+		if err != nil { 
+			return err
+		}
+
+		// activate user in users table
+		if err = s.toggleUserActivated(ctx, user_id, tx); err != nil {
+			return err
+		}
+		// remove user invitation
+
+		if err = s.DeleteInvitation(ctx, user_id, tx); err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func (s *UsersStore) DeleteInvitation(ctx context.Context, userID int64, tx *sql.Tx) error {
+	query := `
+	DELETE FROM user_invitations 
+	WHERE user_id = $1;
+	`
+
+	_, err := tx.ExecContext(ctx, query, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
+
+func (s *UsersStore) toggleUserActivated(ctx context.Context, user_id int64, tx *sql.Tx) error {
+	query := `
+	UPDATE users 
+	SET activated=true 
+	WHERE id=$1;
+	`
+
+	_, err := tx.ExecContext(ctx, query, user_id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *UsersStore) getUserByToken(ctx context.Context, tx *sql.Tx, token string) (int64, error) {
+	query := `
 	SELECT user_id 
 	FROM user_invitations 
 	WHERE token=$1 AND expiry > $2;
 	`
 
-		hash := sha256.Sum256([]byte(token))
-		hashToken := hex.EncodeToString(hash[:])
+	hash := sha256.Sum256([]byte(token))
+	hashToken := hex.EncodeToString(hash[:])
 
-		ctx, Cancel := context.WithTimeout(ctx, timeOutDuration)
-		defer Cancel()
-		var user_id int64
-
-		err := tx.QueryRowContext(
-			ctx,
-			query,
-			hashToken,
-			time.Now(),
-		).Scan(
-			&user_id,
-		)
-
-		if err != nil {
-			switch err {
-			case sql.ErrNoRows:
-				return ErrorNotFound
-			default:
-				return err
-			}
-		}
 	
-		// activate user in users table
-		query = `
-	UPDATE users 
-	SET activated=true 
-	WHERE id=$1;
-	`
-		
+	var user_id int64
 
-		_, err = tx.ExecContext(ctx, query, user_id)
-		if err != nil {
-			return err
+	err := tx.QueryRowContext(
+		ctx,
+		query,
+		hashToken,
+		time.Now(),
+	).Scan(
+		&user_id,
+	)
+
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return 0, ErrorNotFound
+		default:
+			return 0, err
 		}
-		
-
-		// remove user invitation
-		query = `
-	DELETE FROM user_invitations 
-	WHERE user_id = $1;
-	`
-		
-
-		_, err = tx.ExecContext(ctx, query, user_id)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
+	}
+	return user_id, nil
 }
