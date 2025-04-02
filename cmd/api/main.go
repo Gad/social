@@ -5,6 +5,7 @@ import (
 
 	"github.com/gad/social/internal/db"
 	"github.com/gad/social/internal/env"
+	"github.com/gad/social/internal/mailer"
 	"github.com/gad/social/internal/store"
 )
 
@@ -72,6 +73,7 @@ func main() {
 		config: cfg,
 		store:  store,
 		logger: logger,
+		mailer: mailtrap,
 	}
 
 	logger.Fatal((app.run_app(app.mnt_mux())))
