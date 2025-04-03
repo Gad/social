@@ -22,29 +22,28 @@ type application struct {
 }
 
 type config struct {
-	addr    string
-	apiURL  string
-	db      dbConfig
-	env     string
-	version string
-	maxByte int64 // max size for incoming http body to mitigate DDOS
-	mail mailConfig
+	addr        string
+	apiURL      string
+	frontendURL string
+	db          dbConfig
+	env         string
+	version     string
+	maxByte     int64 // max size for incoming http body to mitigate DDOS
+	mail        mailConfig
 }
 
-type mailConfig struct{
-	exp time.Duration
-	sendGrid sendGridConfig
-	mailTrap mailTrapConfig
+type mailConfig struct {
+	exp       time.Duration
+	sendGrid  sendGridConfig
+	mailTrap  mailTrapConfig
 	fromEmail string
-	
 }
 
-type sendGridConfig struct{
+type sendGridConfig struct {
 	apiKey string
 }
 
-
-type mailTrapConfig struct{
+type mailTrapConfig struct {
 	apiKey string
 }
 
@@ -81,7 +80,7 @@ func (app *application) mnt_mux() *chi.Mux {
 			})
 		})
 		m.Route("/users", func(m chi.Router) {
-			
+
 			//m.Post("/", app.createPostHandler)
 			m.Route("/{userid}", func(m chi.Router) {
 				m.Use(app.userToContextMiddleware)
@@ -96,7 +95,7 @@ func (app *application) mnt_mux() *chi.Mux {
 
 			})
 		})
-		m.Route("/authentication", func(m chi.Router){
+		m.Route("/authentication", func(m chi.Router) {
 			m.Post("/user", app.registerUserHandler)
 		})
 

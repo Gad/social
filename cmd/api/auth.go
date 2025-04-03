@@ -3,8 +3,10 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 
+	"github.com/gad/social/internal/mailer"
 	"github.com/gad/social/internal/store"
 	"github.com/gofrs/uuid"
 )
@@ -76,7 +78,28 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// TODO : implement mail
+	vars := struct{
+		Username string
+		ActivationLink string
+	} {
+		Username: user.Username,
+		ActivationLink: fmt.Sprintf("%s/activate/%s",app.config.frontendURL,plainTokenS),
+	}
+
+	isProdEnv := app.config.env == "PRODUCTION"
+	err = app.mailer.Send(mailer.UserWelcomeTemplate, user.Username, user.Email, vars, !isProdEnv )
+	if err != nil{
+		app.logger.Errorw("Error sending confirmation email : ", err)
+
+		// rollback user creation
+
+		if err := app.store.Users.Delete(r.Context(), user.ID); err != nil {
+			app.logger.Errorw("Error sending confirmation email : ", err)
+			
+		}
+		app.internalServerErrorResponse(w, r, err)
+		return
+	}
 
 	if err := app.jsonResponse(w, http.StatusCreated, nil); err != nil {
 		app.internalServerErrorResponse(w, r, err)

@@ -30,6 +30,7 @@ func main() {
 	cfg := config{
 		addr:   env.GetString("ADDR", ":8080"),
 		apiURL: env.GetString("DEPLOYMENT_ADDR", "localhost:8080"),
+		frontendURL : env.GetString("FRONTEND_ADDR", "http://localhost:4000"),
 		db: dbConfig{
 			addr: env.GetString("DB_ADDR", "postgres://admin:adminpassword@localhost:5432/social?"+
 				"sslmode=disable"),
@@ -42,7 +43,11 @@ func main() {
 		version: env.GetString("VERSION", "0.0.2"),
 		maxByte: int64(env.GetInt("MAX_BYTES", 1_048_578)),
 		mail: mailConfig{
-			exp: time.Hour * 24 * 3,
+			exp:       time.Hour * 24 * 3,
+			fromEmail: env.GetString("FROM_EMAIL", ""),
+			mailTrap: mailTrapConfig{
+				apiKey: env.GetString("MAILTRAP_API_KEY", ""),
+			},
 		},
 	}
 
@@ -69,11 +74,12 @@ func main() {
 	defer db.Close()
 	store := store.NewStorage(db)
 
+	mailer := mailer.NewMailtrap(cfg.mail.mailTrap.apiKey, cfg.mail.fromEmail)
 	app := application{
 		config: cfg,
 		store:  store,
 		logger: logger,
-		mailer: mailtrap,
+		mailer: mailer,
 	}
 
 	logger.Fatal((app.run_app(app.mnt_mux())))
