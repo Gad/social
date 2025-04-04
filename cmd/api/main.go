@@ -30,7 +30,7 @@ func main() {
 	cfg := config{
 		addr:        env.GetString("ADDR", ":8080"),
 		apiURL:      env.GetString("DEPLOYMENT_ADDR", "localhost:8080"),
-		frontendURL: env.GetString("FRONTEND_ADDR", "http://localhost:4000"),
+		frontendURL: env.GetString("FRONTEND_ADDR", "http://localhost:5173"),
 		db: dbConfig{
 			addr: env.GetString("DB_ADDR", "postgres://admin:adminpassword@localhost:5432/social?"+
 				"sslmode=disable"),
@@ -45,6 +45,7 @@ func main() {
 		mail: mailConfig{
 			exp:       time.Hour * 24 * 3,
 			fromEmail: env.GetString("FROM_EMAIL", ""),
+			maxRetries : env.GetInt("MAIL_MAX_RETRIES", 3),
 			mailTrap: mailTrapConfig{
 				apiKey:       env.GetString("MAILTRAP_API_KEY", ""),
 				smtpAddr:     env.GetString("MAILTRAP_SMTP_ADDR", "live.smtp.mailtrap.io"),
@@ -83,6 +84,7 @@ func main() {
 		cfg.mail.mailTrap.smtpAddr,
 		cfg.mail.mailTrap.smtpUsername,
 		cfg.mail.mailTrap.smtpPort,
+		cfg.mail.maxRetries,
 	)
 
 	app := application{
