@@ -240,7 +240,7 @@ func (s *UsersStore) Delete(ctx context.Context, userID int64) error {
 
 func (s *UsersStore) delete(ctx context.Context, userID int64, tx *sql.Tx) error {
 	query := `DELETE FROM users 
-	WHERE user_id = $1;
+	WHERE id = $1;
 	`
 	ctx, Cancel := context.WithTimeout(ctx, timeOutDuration)
 	defer Cancel()

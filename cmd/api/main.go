@@ -75,6 +75,7 @@ func main() {
 	store := store.NewStorage(db)
 
 	mailer := mailer.NewMailtrap(cfg.mail.mailTrap.apiKey, cfg.mail.fromEmail)
+	
 	app := application{
 		config: cfg,
 		store:  store,
