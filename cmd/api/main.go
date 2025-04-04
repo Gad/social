@@ -28,9 +28,9 @@ import (
 func main() {
 
 	cfg := config{
-		addr:   env.GetString("ADDR", ":8080"),
-		apiURL: env.GetString("DEPLOYMENT_ADDR", "localhost:8080"),
-		frontendURL : env.GetString("FRONTEND_ADDR", "http://localhost:4000"),
+		addr:        env.GetString("ADDR", ":8080"),
+		apiURL:      env.GetString("DEPLOYMENT_ADDR", "localhost:8080"),
+		frontendURL: env.GetString("FRONTEND_ADDR", "http://localhost:4000"),
 		db: dbConfig{
 			addr: env.GetString("DB_ADDR", "postgres://admin:adminpassword@localhost:5432/social?"+
 				"sslmode=disable"),
@@ -46,7 +46,10 @@ func main() {
 			exp:       time.Hour * 24 * 3,
 			fromEmail: env.GetString("FROM_EMAIL", ""),
 			mailTrap: mailTrapConfig{
-				apiKey: env.GetString("MAILTRAP_API_KEY", ""),
+				apiKey:       env.GetString("MAILTRAP_API_KEY", ""),
+				smtpAddr:     env.GetString("MAILTRAP_SMTP_ADDR", "live.smtp.mailtrap.io"),
+				smtpPort:     env.GetInt("MAILTRAP_SMTP_PORT", 587),
+				smtpUsername: env.GetString("MAILTRAP_USERNAME", "api"),
 			},
 		},
 	}
@@ -74,8 +77,14 @@ func main() {
 	defer db.Close()
 	store := store.NewStorage(db)
 
-	mailer := mailer.NewMailtrap(cfg.mail.mailTrap.apiKey, cfg.mail.fromEmail)
-	
+	mailer := mailer.NewMailtrap(
+		cfg.mail.mailTrap.apiKey,
+		cfg.mail.fromEmail,
+		cfg.mail.mailTrap.smtpAddr,
+		cfg.mail.mailTrap.smtpUsername,
+		cfg.mail.mailTrap.smtpPort,
+	)
+
 	app := application{
 		config: cfg,
 		store:  store,

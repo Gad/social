@@ -45,6 +45,9 @@ type sendGridConfig struct {
 
 type mailTrapConfig struct {
 	apiKey string
+	smtpAddr string
+    smtpPort int    
+    smtpUsername string
 }
 
 type dbConfig struct {
