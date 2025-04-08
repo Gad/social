@@ -31,13 +31,23 @@ type config struct {
 	version     string
 	maxByte     int64 // max size for incoming http body to mitigate DDOS
 	mail        mailConfig
+	auth        authconfig
+}
+
+type authconfig struct {
+	basic basicConfig
+}
+
+type basicConfig struct {
+	username string
+	password string
 }
 
 type mailConfig struct {
-	exp       time.Duration
-	sendGrid  sendGridConfig
-	mailTrap  mailTrapConfig
-	fromEmail string
+	exp        time.Duration
+	sendGrid   sendGridConfig
+	mailTrap   mailTrapConfig
+	fromEmail  string
 	maxRetries int
 }
 
@@ -46,10 +56,10 @@ type sendGridConfig struct {
 }
 
 type mailTrapConfig struct {
-	apiKey string
-	smtpAddr string
-    smtpPort int    
-    smtpUsername string
+	apiKey       string
+	smtpAddr     string
+	smtpPort     int
+	smtpUsername string
 }
 
 type dbConfig struct {
@@ -70,7 +80,7 @@ func (app *application) mnt_mux() *chi.Mux {
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: false,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
-	  }))
+	}))
 
 	mux.Use(middleware.Logger)
 	mux.Use(middleware.Recoverer)
@@ -80,7 +90,7 @@ func (app *application) mnt_mux() *chi.Mux {
 	mux.Use(middleware.Timeout(time.Second * 60))
 
 	mux.Route("/v1", func(m chi.Router) {
-		m.Get("/health", app.getHealthHandler)
+		m.With(app.BasicAuthMiddleware()).Get("/health", app.getHealthHandler)
 
 		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
 		m.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))

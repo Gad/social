@@ -43,14 +43,20 @@ func main() {
 		version: env.GetString("VERSION", "0.0.2"),
 		maxByte: int64(env.GetInt("MAX_BYTES", 1_048_578)),
 		mail: mailConfig{
-			exp:       time.Hour * 24 * 3,
-			fromEmail: env.GetString("FROM_EMAIL", ""),
-			maxRetries : env.GetInt("MAIL_MAX_RETRIES", 3),
+			exp:        time.Hour * 24 * 3,
+			fromEmail:  env.GetString("FROM_EMAIL", ""),
+			maxRetries: env.GetInt("MAIL_MAX_RETRIES", 3),
 			mailTrap: mailTrapConfig{
 				apiKey:       env.GetString("MAILTRAP_API_KEY", ""),
 				smtpAddr:     env.GetString("MAILTRAP_SMTP_ADDR", "live.smtp.mailtrap.io"),
 				smtpPort:     env.GetInt("MAILTRAP_SMTP_PORT", 587),
 				smtpUsername: env.GetString("MAILTRAP_USERNAME", "api"),
+			},
+		}, 
+		auth: authconfig{
+			basic: basicConfig{
+				username: env.GetString("BASIC_AUTH_USER_NAME", "admin"),
+				password: env.GetString("BASIC_AUTH_PASSWORD", "admin"),
 			},
 		},
 	}

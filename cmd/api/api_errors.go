@@ -40,3 +40,11 @@ func (app *application) conflictResponse(w http.ResponseWriter, r *http.Request,
 	app.logger.Errorw("Database conflict error","method",r.Method, "path", r.URL.Path, "error", err.Error())
 	writeJsonError(w, http.StatusConflict, "database conflict")
 }
+
+func (app *application) basicAuthError (w http.ResponseWriter, r *http.Request, err error) {
+	app.logger.Warnw("basic authorization error", r.Method, "path", r.URL.Path, "error", err.Error())
+
+	w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)
+
+	writeJsonError(w, http.StatusUnauthorized, "unauthorized")
+}
