@@ -49,7 +49,7 @@ func (app *application) basicAuthError (w http.ResponseWriter, r *http.Request, 
 	writeJsonError(w, http.StatusUnauthorized, "unauthorized")
 }
 func (app *application) AuthError (w http.ResponseWriter, r *http.Request, err error) {
-	app.logger.Warnw("basic authorization error", r.Method, "path", r.URL.Path, "error", err.Error())
+	app.logger.Warnw("Token authorization error", r.Method, "path", r.URL.Path, "error", err.Error())
 
 	
 

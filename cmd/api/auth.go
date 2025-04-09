@@ -50,7 +50,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		Email:    payload.Email,
 	}
 
-	if err := user.Password.Set(payload.Username); err != nil {
+	if err := user.Password.Set(payload.Password); err != nil {
 		app.internalServerErrorResponse(w, r, err)
 		return
 	}
@@ -151,10 +151,10 @@ func (app *application) setTokenHandler (w http.ResponseWriter, r *http.Request)
 			return
 		}
 
-		if err = user.Password.Compare(payload.Password); err!= nil {
+		 if err = user.Password.Compare(payload.Password); err!= nil {
 			app.AuthError(w, r, err)
 			return
-		}
+		} 
 
 		claims := jwt.MapClaims{
 			"sub" : user.ID,

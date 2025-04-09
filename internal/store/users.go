@@ -42,7 +42,9 @@ func (p *password) Set(plaintext string) error {
 }
 
 func (p *password) Compare(passwordS string) error {
-
+	/* log.Printf("hashed %v - non-hashed%v", p.hash, passwordS)
+	h, _ := bcrypt.GenerateFromPassword([]byte(passwordS), bcrypt.DefaultCost)
+	log.Printf("hashed of passwordS %v", h) */
 	return bcrypt.CompareHashAndPassword(p.hash,[]byte(passwordS))
 }
 

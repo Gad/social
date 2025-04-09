@@ -48,19 +48,18 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		app.badRequestResponse(w, r, err, true)
 		return
 	}
-
-	
-	userId := 27
+	ctx := r.Context()
+	user := getUserFromCtx(r)
 	p := &store.Post{
 		Content: payload.Content,
 		Title:   payload.Title,
 		Tags:    payload.Tags,
-		UserID:  int64(userId),
+		UserID:  user.ID,
 	}
 
 	
 
-	ctx := r.Context()
+	
 
 	if err := app.store.Posts.Create(ctx, p); err != nil {
 		app.internalServerErrorResponse(w, r, err)

@@ -55,19 +55,19 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		404	{object}	error
 //	@Failure		500	{object}	error
 //	@Security		ApiKeyAuth
-//	@Router			/users/{id}/follow  [put]
+//	@Router			/users/{userid}/follow  [put]
 func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
 
-	followedUser := getUserFromCtx(r)
-
-	var follower FollowingUser
-
-	if err := readJson(app, w, r, &follower); err != nil {
+	followedID, err := strconv.ParseInt(chi.URLParam(r, "userid"), 10, 64)
+	if err != nil {
 		app.badRequestResponse(w, r, err, true)
 		return
 	}
 
-	if err := app.store.Users.Follow(r.Context(), followedUser.ID, follower.UserID); err != nil {
+	follower := getUserFromCtx(r)
+
+
+	if err := app.store.Users.Follow(r.Context(), followedID, follower.ID); err != nil {
 
 		app.badRequestResponse(w, r, err, true)
 
@@ -94,19 +94,17 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 //	@Failure		404	{object}	error	"User not found"
 //	@Failure		500	{object}	error
 //	@Security		ApiKeyAuth
-//	@Router			/users/{id}/unfollow  [put]
+//	@Router			/users/{userid}/unfollow  [put]
 func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
 
-	followedUser := getUserFromCtx(r)
-
-	var follower FollowingUser
-
-	if err := readJson(app, w, r, &follower); err != nil {
+	followedID, err := strconv.ParseInt(chi.URLParam(r, "userid"), 10, 64)
+	if err != nil {
 		app.badRequestResponse(w, r, err, true)
 		return
 	}
+	follower := getUserFromCtx(r)
 
-	if err := app.store.Users.Unfollow(r.Context(), followedUser.ID, follower.UserID); err != nil {
+	if err := app.store.Users.Unfollow(r.Context(), followedID, follower.ID); err != nil {
 		app.internalServerErrorResponse(w, r, err)
 
 	}

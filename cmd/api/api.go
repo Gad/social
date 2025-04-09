@@ -17,10 +17,10 @@ import (
 )
 
 type application struct {
-	config config
-	store  store.Storage
-	logger *zap.SugaredLogger
-	mailer mailer.Client
+	config        config
+	store         store.Storage
+	logger        *zap.SugaredLogger
+	mailer        mailer.Client
 	authenticator auth.Authenticator
 }
 
@@ -48,11 +48,9 @@ type basicConfig struct {
 
 type tokenConfig struct {
 	secret string
-	exp time.Duration
+	exp    time.Duration
 	issuer string
-
 }
-
 
 type mailConfig struct {
 	exp        time.Duration
@@ -106,6 +104,7 @@ func (app *application) mnt_mux() *chi.Mux {
 		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
 		m.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 		m.Route("/posts", func(m chi.Router) {
+			m.Use(app.TokenAuthMiddleware)
 			m.Post("/", app.createPostHandler)
 			m.Route("/{postid}", func(m chi.Router) {
 				m.Use(app.postToContextMiddleware)
@@ -119,17 +118,21 @@ func (app *application) mnt_mux() *chi.Mux {
 
 			//m.Post("/", app.createPostHandler)
 			m.Route("/{userid}", func(m chi.Router) {
-				m.Use(app.userToContextMiddleware)
+				m.Use(app.TokenAuthMiddleware)
+				//m.Use(app.userToContextMiddleware)
 				m.Get("/", app.getUserHandler)
 				m.Put("/follow", app.followUserHandler)
 				m.Put("/unfollow", app.unfollowUserHandler)
 
 			})
-			m.Put("/activate/{token}", app.activateUserHandler)
+			
 			m.Group(func(m chi.Router) {
+				m.Use(app.TokenAuthMiddleware)
 				m.Get("/feed", app.getUserFeedHandler)
 
 			})
+
+			m.Put("/activate/{token}", app.activateUserHandler)
 		})
 		m.Route("/authentication", func(m chi.Router) {
 			m.Post("/user", app.registerUserHandler)
