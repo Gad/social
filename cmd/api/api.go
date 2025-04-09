@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gad/social/docs"
+	"github.com/gad/social/internal/auth"
 	"github.com/gad/social/internal/mailer"
 	"github.com/gad/social/internal/store"
 	"github.com/go-chi/chi/v5"
@@ -20,6 +21,7 @@ type application struct {
 	store  store.Storage
 	logger *zap.SugaredLogger
 	mailer mailer.Client
+	authenticator auth.Authenticator
 }
 
 type config struct {
@@ -36,12 +38,21 @@ type config struct {
 
 type authconfig struct {
 	basic basicConfig
+	token tokenConfig
 }
 
 type basicConfig struct {
 	username string
 	password string
 }
+
+type tokenConfig struct {
+	secret string
+	exp time.Duration
+	issuer string
+
+}
+
 
 type mailConfig struct {
 	exp        time.Duration
@@ -122,6 +133,7 @@ func (app *application) mnt_mux() *chi.Mux {
 		})
 		m.Route("/authentication", func(m chi.Router) {
 			m.Post("/user", app.registerUserHandler)
+			m.Post("/token", app.setTokenHandler)
 		})
 
 	})

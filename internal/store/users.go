@@ -41,6 +41,12 @@ func (p *password) Set(plaintext string) error {
 	return nil
 }
 
+func (p *password) Compare(passwordS string) error {
+
+	return bcrypt.CompareHashAndPassword(p.hash,[]byte(passwordS))
+}
+
+
 type UsersStore struct {
 	db *sql.DB
 }
@@ -298,3 +304,36 @@ func (s *UsersStore) getUserByToken(ctx context.Context, tx *sql.Tx, token strin
 	}
 	return user_id, nil
 }
+
+func (s *UsersStore) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+	query := `SELECT id, username, password
+	FROM users
+	WHERE email = $1 and activated = true`
+
+	user := User{}
+
+	ctx, Cancel := context.WithTimeout(ctx, timeOutDuration)
+	defer Cancel()
+
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		email,
+	).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Password.hash,
+
+	)
+
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return nil, ErrorNotFound
+		default:
+			return nil, err
+		}
+	}
+	return &user, nil
+}
+

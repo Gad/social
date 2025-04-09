@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	"github.com/gad/social/internal/auth"
 	"github.com/gad/social/internal/db"
 	"github.com/gad/social/internal/env"
 	"github.com/gad/social/internal/mailer"
@@ -52,11 +53,16 @@ func main() {
 				smtpPort:     env.GetInt("MAILTRAP_SMTP_PORT", 587),
 				smtpUsername: env.GetString("MAILTRAP_USERNAME", "api"),
 			},
-		}, 
+		},
 		auth: authconfig{
 			basic: basicConfig{
 				username: env.GetString("BASIC_AUTH_USER_NAME", "admin"),
 				password: env.GetString("BASIC_AUTH_PASSWORD", "admin"),
+			},
+			token: tokenConfig{
+				secret: env.GetString("TOKEN_AUTH_SECRET", "secret"),
+				issuer: env.GetString("TOKEN_AUTH_ISSUER", "Gophersocial"),
+				exp:    time.Hour * 24 * 3,
 			},
 		},
 	}
@@ -93,11 +99,17 @@ func main() {
 		cfg.mail.maxRetries,
 	)
 
+	jwtAuth := auth.NewSimpleJWTAuthenticator(
+		cfg.auth.token.secret,
+		cfg.auth.token.issuer,
+		cfg.auth.token.issuer)
+
 	app := application{
-		config: cfg,
-		store:  store,
-		logger: logger,
-		mailer: mailer,
+		config:        cfg,
+		store:         store,
+		logger:        logger,
+		mailer:        mailer,
+		authenticator: jwtAuth,
 	}
 
 	logger.Fatal((app.run_app(app.mnt_mux())))
