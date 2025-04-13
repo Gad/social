@@ -4,10 +4,12 @@ import (
 	"time"
 
 	"github.com/gad/social/internal/auth"
+	"github.com/gad/social/internal/cache"
 	"github.com/gad/social/internal/db"
 	"github.com/gad/social/internal/env"
 	"github.com/gad/social/internal/mailer"
 	"github.com/gad/social/internal/store"
+	"github.com/redis/go-redis/v9"
 )
 
 //	@title			Swagger Example API
@@ -65,6 +67,13 @@ func main() {
 				exp:    time.Hour * 24 * 3,
 			},
 		},
+		redisCfg: redisConfig{
+			addr:     env.GetString("REDIS_ADDR", "localhost:6379"),
+			password: env.GetString("REDIS_PASSWORD", ""),
+			db:       env.GetInt("REDIS_DB", 0),
+			enabled:  env.GetBool("REDIS_ENABLED", true),
+			ttl:	  env.GetDuration("REDIS_TTL", time.Minute),
+		},
 	}
 
 	// logger setup
@@ -90,6 +99,18 @@ func main() {
 	defer db.Close()
 	store := store.NewStorage(db)
 
+	//Cache setup
+	var cachedb *redis.Client
+	if cfg.redisCfg.enabled {
+	cachedb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.password, cfg.redisCfg.db)
+	logger.Info("Connection with Redis cache established")
+	} else {
+		cachedb = nil
+		logger.Info("Redis cache disabled")
+	}		
+
+	cacheStorage := cache.NewRedisStorage(cachedb, cfg.redisCfg.ttl)
+
 	mailer := mailer.NewMailtrap(
 		cfg.mail.mailTrap.apiKey,
 		cfg.mail.fromEmail,
@@ -110,6 +131,8 @@ func main() {
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: jwtAuth,
+		cacheStorage: cacheStorage,
+
 	}
 
 	logger.Fatal((app.run_app(app.mnt_mux())))

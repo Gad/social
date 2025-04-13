@@ -7,6 +7,7 @@ import (
 
 	"github.com/gad/social/docs"
 	"github.com/gad/social/internal/auth"
+	"github.com/gad/social/internal/cache"
 	"github.com/gad/social/internal/mailer"
 	"github.com/gad/social/internal/store"
 	"github.com/go-chi/chi/v5"
@@ -22,6 +23,7 @@ type application struct {
 	logger        *zap.SugaredLogger
 	mailer        mailer.Client
 	authenticator auth.Authenticator
+	cacheStorage  cache.Storage
 }
 
 type config struct {
@@ -34,6 +36,15 @@ type config struct {
 	maxByte     int64 // max size for incoming http body to mitigate DDOS
 	mail        mailConfig
 	auth        authconfig
+	redisCfg    redisConfig
+}
+
+type redisConfig struct {
+	addr     string
+	password string
+	db       int
+	enabled  bool
+	ttl 	 time.Duration
 }
 
 type authconfig struct {
@@ -123,7 +134,7 @@ func (app *application) mnt_mux() *chi.Mux {
 				m.Put("/unfollow", app.unfollowUserHandler)
 
 			})
-			
+
 			m.Group(func(m chi.Router) {
 				m.Use(app.TokenAuthMiddleware)
 				m.Get("/feed", app.getUserFeedHandler)

@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gad/social/internal/store"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -85,16 +86,53 @@ func (app *application) TokenAuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		user, err := app.store.Users.GetUserById(r.Context(), userID)
-
+		user, err := app.getUser(r.Context(), userID)
 		if err != nil {
-			app.authError(w, r, err)
+			switch err {
+			case store.ErrorNotFound:
+				app.authError(w, r, err)
+			default:
+				app.internalServerErrorResponse(w, r, err)
+			}
 			return
 		}
 
 		ctx := context.WithValue(r.Context(), userKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+// getUser retrieves the user from the cache or the database
+// and sets it in the context
+// it returns the user and an error if any
+func (app *application) getUser(ctx context.Context, userID int64) (*store.User, error) {
+	
+	// if redis is not enabled, get user from db
+	if !app.config.redisCfg.enabled {
+		return app.store.Users.GetUserById(ctx, userID)
+	}
+
+	app.logger.Infow("Trying to get user from cache", "userID", userID)
+	user, err := app.cacheStorage.Users.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if user == nil {
+		app.logger.Infow("fetching user from db", "userID", userID)
+		user, err = app.store.Users.GetUserById(ctx, userID)
+		if err != nil {
+			return user, err
+		}
+	}
+
+
+	// set user in cache
+	if err := app.cacheStorage.Users.Set(ctx, user); err != nil {
+		app.logger.Warn("failed to set user in cache", err)
+	}
+	return user, nil
+
 }
 
 func (app *application) checkOwnerShip(role string, next http.HandlerFunc) http.HandlerFunc {
