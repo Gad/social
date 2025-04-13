@@ -109,17 +109,15 @@ func (app *application) mnt_mux() *chi.Mux {
 			m.Route("/{postid}", func(m chi.Router) {
 				m.Use(app.postToContextMiddleware)
 				m.Get("/", app.getPostHandler)
-				m.Delete("/", app.deletePostHandler)
-				m.Patch("/", app.patchPostHandler)
+				m.Delete("/", app.checkOwnerShip("admin", app.deletePostHandler))
+				m.Patch("/", app.checkOwnerShip("moderator", app.patchPostHandler))
 
 			})
 		})
 		m.Route("/users", func(m chi.Router) {
 
-			//m.Post("/", app.createPostHandler)
 			m.Route("/{userid}", func(m chi.Router) {
 				m.Use(app.TokenAuthMiddleware)
-				//m.Use(app.userToContextMiddleware)
 				m.Get("/", app.getUserHandler)
 				m.Put("/follow", app.followUserHandler)
 				m.Put("/unfollow", app.unfollowUserHandler)

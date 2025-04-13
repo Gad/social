@@ -435,7 +435,7 @@ var potentialComments = []string{
 	"Love this!", "So inspiring!", "Needed this today!", "Great advice!", "So true!", "Thank you for sharing!", "This is amazing!", "Love your perspective!", "Spot on!", "You’re awesome!", "So motivating!", "This made my day!", "Perfect timing!", "Love the energy!", "So relatable!", "Keep it up!", "This is gold!", "You nailed it!", "So powerful!", "Love the positivity!", "This is fire!", "So well said!", "You’re crushing it!", "This hit home!", "So uplifting!", "Love your vibe!", "This is everything!", "So encouraging!", "You’re a star!", "This is brilliant!", "So refreshing!", "Love your work!", "This is so true!", "You’re inspiring!", "So motivating!", "This is pure gold!", "Love your mindset!", "This is spot on!", "You’re amazing!", "So empowering!", "This is fantastic!", "Love your energy!", "This is so helpful!", "You’re a legend!", "So inspiring!", "This is incredible!", "Love your passion!", "This is so powerful!", "You’re killing it!", "So uplifting!", "This is perfect!", "Love your creativity!", "So well-written!", "This is a gem!", "You’re on fire!", "So thoughtful!", "This is life-changing!", "Love your authenticity!", "This is so relatable!", "You’re a rockstar!", "So motivating!", "This is pure inspiration!", "Love your dedication!", "This is so true!", "You’re a genius!", "So uplifting!", "This is amazing work!", "Love your insights!", "This is so encouraging!", "You’re a true inspiration!", "So powerful!", "This is exactly what I needed!", "Love your positivity!", "This is so well said!", "You’re incredible!", "So motivating!", "This is gold!", "Love your energy!", "This is so inspiring!", "You’re a blessing!", "So uplifting!", "This is fantastic advice!", "Love your perspective!", "This is so true!", "You’re amazing!", "So empowering!", "This is brilliant!", "Love your vibe!", "This is so helpful!", "You’re a legend!", "So inspiring!", "This is incredible!", "Love your passion!", "This is so powerful!", "You’re killing it!", "So uplifting!", "This is perfect!", "Love your creativity!", "So well-written!", "This is a gem!", "You’re on fire!", "So thoughtful!", "This is life-changing!", "Love your authenticity!", "This is so relatable!", "You’re a rockstar!", "So motivating!", "This is pure inspiration!", "Love your dedication!", "This is so true!", "You’re a genius!", "So uplifting!", "This is amazing work!", "Love your insights!", "This is so encouraging!", "You’re a true inspiration!", "So powerful!", "This is exactly what I needed!", "Love your positivity!", "This is so well said!", "You’re incredible!", "So motivating!", "This is gold!", "Love your energy!", "This is so inspiring!", "You’re a blessing!", "So uplifting!", "This is fantastic advice!", "Love your perspective!", "This is so true!", "You’re amazing!", "So empowering!", "This is brilliant!", "Love your vibe!", "This is so helpful!", "You’re a legend!", "So inspiring!", "This is incredible!", "Love your passion!", "This is so powerful!", "You’re killing it!", "So uplifting!", "This is perfect!", "Love your creativity!", "So well-written!", "This is a gem!", "You’re on fire!", "So thoughtful!", "This is life-changing!", "Love your authenticity!", "This is so relatable!", "You’re a rockstar!", "So motivating!", "This is pure inspiration!", "Love your dedication!", "This is so true!", "You’re a genius!", "So uplifting!", "This is amazing work!", "Love your insights!", "This is so encouraging!", "You’re a true inspiration!", "So powerful!", "This is exactly what I needed!", "Love your positivity!", "This is so well said!", "You’re incredible!", "So motivating!", "This is gold!", "Love your energy!",
 }
 
-func Seed(store store.Storage, numUsers int, numPosts int, numComments int, db *sql.DB)  {
+func Seed(store store.Storage, numUsers int, numPosts int, numComments int, db *sql.DB) {
 
 	// seed users
 	users := generateUsers(numUsers)
@@ -443,7 +443,7 @@ func Seed(store store.Storage, numUsers int, numPosts int, numComments int, db *
 	ctx := context.Background()
 
 	tx, _ := db.BeginTx(ctx, nil)
-	
+
 	for i := range numUsers {
 		if err := store.Users.Create(ctx, tx, users[i]); err != nil {
 			log.Fatal(err)
@@ -474,17 +474,20 @@ func Seed(store store.Storage, numUsers int, numPosts int, numComments int, db *
 	log.Println("Seeding Complete !")
 }
 
+
 func generateUsers(numUsers int) []*store.User {
 
 	users := make([]*store.User, numUsers)
 
 	for i := 0; i < numUsers; i++ {
-		name := potentialNames[rand.Intn(len(potentialNames))]+strconv.Itoa(i)
+		name := potentialNames[rand.Intn(len(potentialNames))] + strconv.Itoa(i)
 
 		users[i] = &store.User{
 			Username: name,
 			Email:    fmt.Sprintf("%s@example.com", name),
-			
+			Role: store.Role{
+				Name : "user",
+			},
 		}
 		_ = users[i].Password.Set(name)
 	}

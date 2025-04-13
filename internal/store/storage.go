@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"time"
-
 )
 
 var (
@@ -42,6 +41,10 @@ type Storage struct {
 	Feeds interface {
 		GetUserDefaultFeed(context.Context, int64, FeedPaginationQuery) ([]PostWtMetadata, error)
 	}
+
+	Roles interface {
+		GetRoleByName(context.Context, string) (*Role, error)
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {
@@ -50,6 +53,7 @@ func NewStorage(db *sql.DB) Storage {
 		Users:    &UsersStore{db},
 		Comments: &CommentsStore{db},
 		Feeds:    &FeedsStore{db},
+		Roles:    &RolesStore{db},
 	}
 }
 

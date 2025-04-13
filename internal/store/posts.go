@@ -83,7 +83,6 @@ func (s *PostsStore) GetPostById(ctx context.Context, postID int64) (*Post, erro
 		&p.CreationDate,
 		&p.UpdateDate,
 	)
-
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):

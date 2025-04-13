@@ -7,7 +7,7 @@ migration:
 
 .PHONY: migrate-up
 migrate-up:
-	@migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) up
+	@migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) up 
 
 .PHONY: n 
 migrate-down:

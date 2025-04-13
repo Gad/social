@@ -23,6 +23,7 @@ type User struct {
 	Password     password `json:"-"`
 	CreationDate string   `json:"creation_date"`
 	Activated    bool     `json:"activated"`
+	Role         Role     `json:"role"`
 }
 
 type password struct {
@@ -45,9 +46,8 @@ func (p *password) Compare(passwordS string) error {
 	/* log.Printf("hashed %v - non-hashed%v", p.hash, passwordS)
 	h, _ := bcrypt.GenerateFromPassword([]byte(passwordS), bcrypt.DefaultCost)
 	log.Printf("hashed of passwordS %v", h) */
-	return bcrypt.CompareHashAndPassword(p.hash,[]byte(passwordS))
+	return bcrypt.CompareHashAndPassword(p.hash, []byte(passwordS))
 }
-
 
 type UsersStore struct {
 	db *sql.DB
@@ -55,15 +55,25 @@ type UsersStore struct {
 
 func (s *UsersStore) Create(ctx context.Context, tx *sql.Tx, u *User) error {
 	query := `
-	INSERT INTO users(email,username, password)
-	VALUES ($1, $2, $3) RETURNING id, creation_date;
+	INSERT INTO users(email,username, password, role_id)
+	VALUES ($1, $2, $3, (SELECT id from roles where name = $4)) RETURNING id, creation_date;
 	`
+
+	ctx, cancel := context.WithTimeout(ctx, timeOutDuration)
+	defer cancel()
+
+	// make sure the role is filled with a default value
+	if u.Role.Name == "" {
+		u.Role.Name = "user"
+	}
 
 	err := s.db.QueryRowContext(
 		ctx,
 		query,
 		u.Email,
 		u.Username,
+		u.Role.Name,
+		// hash password
 		u.Password.hash,
 	).Scan(
 		&u.ID,
@@ -128,9 +138,10 @@ func (s *UsersStore) Unfollow(ctx context.Context, followedID int64, followerID 
 
 func (s *UsersStore) GetUserById(ctx context.Context, userID int64) (*User, error) {
 	query := `
-	SELECT username, email, password, creation_date 
+	SELECT users.id, username, email, password, creation_date, roles.* 
 	FROM users 
-	WHERE id = $1;
+	JOIN roles ON roles.id = users.role_id
+	WHERE users.id = $1;
 	`
 
 	ctx, Cancel := context.WithTimeout(ctx, timeOutDuration)
@@ -145,10 +156,15 @@ func (s *UsersStore) GetUserById(ctx context.Context, userID int64) (*User, erro
 		query,
 		userID,
 	).Scan(
+		&u.ID,
 		&u.Username,
 		&u.Email,
 		&u.Password.hash,
-		&u.CreationDate,
+		&u.CreationDate, 
+		&u.Role.ID,
+		&u.Role.Name,
+		&u.Role.Level,
+		&u.Role.Description,
 	)
 
 	if err != nil {
@@ -199,7 +215,7 @@ func (s *UsersStore) Activate(ctx context.Context, token string) error {
 
 		user_id, err := s.getUserByToken(ctx, tx, token)
 
-		if err != nil { 
+		if err != nil {
 			return err
 		}
 
@@ -232,19 +248,17 @@ func (s *UsersStore) deleteInvitation(ctx context.Context, userID int64, tx *sql
 
 func (s *UsersStore) Delete(ctx context.Context, userID int64) error {
 	return withTx(s.db, ctx, func(tx *sql.Tx) error {
-		if err := s.delete(ctx, userID, tx); err != nil{
+		if err := s.delete(ctx, userID, tx); err != nil {
 			return err
 		}
 
-		if err := s.deleteInvitation(ctx, userID, tx); err != nil{
+		if err := s.deleteInvitation(ctx, userID, tx); err != nil {
 			return err
 		}
 		return nil
 	})
 
 }
-
-
 
 func (s *UsersStore) delete(ctx context.Context, userID int64, tx *sql.Tx) error {
 	query := `DELETE FROM users 
@@ -284,7 +298,6 @@ func (s *UsersStore) getUserByToken(ctx context.Context, tx *sql.Tx, token strin
 	hash := sha256.Sum256([]byte(token))
 	hashToken := hex.EncodeToString(hash[:])
 
-	
 	var user_id int64
 
 	err := tx.QueryRowContext(
@@ -325,7 +338,6 @@ func (s *UsersStore) GetUserByEmail(ctx context.Context, email string) (*User, e
 		&user.ID,
 		&user.Username,
 		&user.Password.hash,
-
 	)
 
 	if err != nil {
@@ -338,4 +350,3 @@ func (s *UsersStore) GetUserByEmail(ctx context.Context, email string) (*User, e
 	}
 	return &user, nil
 }
-

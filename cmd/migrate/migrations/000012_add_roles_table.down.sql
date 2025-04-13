@@ -1,1 +1,1 @@
-DROP  TABLE roles IF EXISTS;
+DROP  TABLE IF EXISTS roles;
