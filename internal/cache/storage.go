@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/dgraph-io/badger/v4"
 	"github.com/gad/social/internal/store"
 	"github.com/redis/go-redis/v9"
 )
@@ -19,6 +20,12 @@ type Storage struct {
 
 func NewRedisStorage(rdb *redis.Client, ttl time.Duration) Storage {
 	return Storage{
-		Users: &UserStore{rdb : rdb, ttl: ttl},
+		Users: &RedisUserStore{rdb : rdb, ttl: ttl},
+	}
+}
+
+func NewBadgerStorage(bdb *badger.DB, ttl time.Duration) Storage {	
+	return Storage{
+		Users: &BadgerUserStore{bdb : bdb, ttl : ttl},
 	}
 }

@@ -1,10 +1,12 @@
 package env
 
 import (
+	
 	"os"
 	"strconv"
 	"time"
 )
+
 // GetString retrieves a string value from the environment variables.
 // If the variable is not set, it returns the provided default value.
 func GetString(key, fallback string) string {
@@ -51,6 +53,7 @@ func GetBool(key string, fallback bool) bool {
 		return fallback
 	}
 	parsed, err := strconv.ParseBool(val)
+
 	if err != nil {
 		return fallback
 	}

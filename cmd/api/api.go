@@ -37,6 +37,13 @@ type config struct {
 	mail        mailConfig
 	auth        authconfig
 	redisCfg    redisConfig
+	badgerCfg  badgerConfig	
+}
+
+type badgerConfig struct {
+	path     string
+	enabled  bool
+	ttl      time.Duration
 }
 
 type redisConfig struct {

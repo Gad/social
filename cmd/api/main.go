@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	"github.com/dgraph-io/badger/v4"
 	"github.com/gad/social/internal/auth"
 	"github.com/gad/social/internal/cache"
 	"github.com/gad/social/internal/db"
@@ -71,8 +72,13 @@ func main() {
 			addr:     env.GetString("REDIS_ADDR", "localhost:6379"),
 			password: env.GetString("REDIS_PASSWORD", ""),
 			db:       env.GetInt("REDIS_DB", 0),
-			enabled:  env.GetBool("REDIS_ENABLED", true),
-			ttl:	  env.GetDuration("REDIS_TTL", time.Minute),
+			enabled:  env.GetBool("REDIS_ENABLED", false),
+			ttl:      env.GetDuration("REDIS_TTL", time.Minute),
+		},
+		badgerCfg: badgerConfig{
+			path:    env.GetString("BADGER_PATH", "/tmp/badger"),
+			enabled: env.GetBool("BADGER_ENABLED", false),
+			ttl:     env.GetDuration("BADGER_TTL", time.Minute),
 		},
 	}
 
@@ -100,16 +106,38 @@ func main() {
 	store := store.NewStorage(db)
 
 	//Cache setup
+	//Redis setup
 	var cachedb *redis.Client
 	if cfg.redisCfg.enabled {
-	cachedb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.password, cfg.redisCfg.db)
-	logger.Info("Connection with Redis cache established")
+		cachedb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.password, cfg.redisCfg.db)
+		logger.Info("Connection with Redis cache established")
+		defer cachedb.Close()
 	} else {
 		cachedb = nil
 		logger.Info("Redis cache disabled")
-	}		
+	}
+	//Badger setup
+	var badgerdb *badger.DB
+	if cfg.badgerCfg.enabled {
+		badgerdb, err = cache.NewBadgerDB()
+		if err != nil {
+			logger.Errorw("Could not connect to badger database", "error", err)
+			badgerdb = nil
+		} else {
+			logger.Info("Connection with Badger cache established")
+			defer badgerdb.Close()
+		}
+	} else {
+		badgerdb = nil
+		logger.Info("Badger cache disabled")
+	}
 
-	cacheStorage := cache.NewRedisStorage(cachedb, cfg.redisCfg.ttl)
+	var cacheStorage cache.Storage
+	if cfg.redisCfg.enabled {
+		cacheStorage = cache.NewRedisStorage(cachedb, cfg.redisCfg.ttl)
+	} else if cfg.badgerCfg.enabled {
+		cacheStorage = cache.NewBadgerStorage(badgerdb, cfg.badgerCfg.ttl)
+	}
 
 	mailer := mailer.NewMailtrap(
 		cfg.mail.mailTrap.apiKey,
@@ -131,8 +159,7 @@ func main() {
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: jwtAuth,
-		cacheStorage: cacheStorage,
-
+		cacheStorage:  cacheStorage,
 	}
 
 	logger.Fatal((app.run_app(app.mnt_mux())))

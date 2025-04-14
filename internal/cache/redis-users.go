@@ -10,12 +10,12 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type UserStore struct {
+type RedisUserStore struct {
 	rdb *redis.Client
 	ttl time.Duration
 }
 
-func (s *UserStore) Get(ctx context.Context, userID int64) (*store.User, error) {
+func (s *RedisUserStore) Get(ctx context.Context, userID int64) (*store.User, error) {
 	cacheKey := fmt.Sprintf("user-%v", userID)
 	data, err := s.rdb.Get(ctx, cacheKey).Result()
 	if err != nil {
@@ -35,7 +35,7 @@ func (s *UserStore) Get(ctx context.Context, userID int64) (*store.User, error) 
 
 }
 
-func (s *UserStore) Set(ctx context.Context, user *store.User) error {
+func (s *RedisUserStore) Set(ctx context.Context, user *store.User) error {
 	if user.ID == 0 {
 		return fmt.Errorf("user ID is required")
 	}
