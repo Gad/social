@@ -68,17 +68,16 @@ func main() {
 				exp:    time.Hour * 24 * 3,
 			},
 		},
+		cacheState: cacheState(env.GetInt("CACHE_STATE", int(None))),
 		redisCfg: redisConfig{
 			addr:     env.GetString("REDIS_ADDR", "localhost:6379"),
 			password: env.GetString("REDIS_PASSWORD", ""),
 			db:       env.GetInt("REDIS_DB", 0),
-			enabled:  env.GetBool("REDIS_ENABLED", false),
 			ttl:      env.GetDuration("REDIS_TTL", time.Minute),
 		},
 		badgerCfg: badgerConfig{
-			path:    env.GetString("BADGER_PATH", "/tmp/badger"),
-			enabled: env.GetBool("BADGER_ENABLED", false),
-			ttl:     env.GetDuration("BADGER_TTL", time.Minute),
+			path: env.GetString("BADGER_PATH", "/tmp/badger"),
+			ttl:  env.GetDuration("BADGER_TTL", time.Minute),
 		},
 	}
 
@@ -106,19 +105,19 @@ func main() {
 	store := store.NewStorage(db)
 
 	//Cache setup
-	//Redis setup
-	var cachedb *redis.Client
-	if cfg.redisCfg.enabled {
-		cachedb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.password, cfg.redisCfg.db)
-		logger.Info("Connection with Redis cache established")
-		defer cachedb.Close()
-	} else {
-		cachedb = nil
-		logger.Info("Redis cache disabled")
-	}
-	//Badger setup
+	var redisdb *redis.Client
 	var badgerdb *badger.DB
-	if cfg.badgerCfg.enabled {
+	var cacheStorage cache.Storage
+	
+	switch cfg.cacheState {
+	case Redis:
+		redisdb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.password, cfg.redisCfg.db)
+		logger.Info("Connection with Redis cache established")
+		cacheStorage = cache.NewRedisStorage(redisdb, cfg.redisCfg.ttl)
+		defer redisdb.Close()
+		
+
+	case Badger:
 		badgerdb, err = cache.NewBadgerDB()
 		if err != nil {
 			logger.Errorw("Could not connect to badger database", "error", err)
@@ -127,17 +126,17 @@ func main() {
 			logger.Info("Connection with Badger cache established")
 			defer badgerdb.Close()
 		}
-	} else {
+		cacheStorage = cache.NewBadgerStorage(badgerdb, cfg.badgerCfg.ttl)
+
+	case None:
+		redisdb = nil
 		badgerdb = nil
-		logger.Info("Badger cache disabled")
+		cacheStorage = cache.Storage{}
+		logger.Info("all cache disabled")
+
 	}
 
-	var cacheStorage cache.Storage
-	if cfg.redisCfg.enabled {
-		cacheStorage = cache.NewRedisStorage(cachedb, cfg.redisCfg.ttl)
-	} else if cfg.badgerCfg.enabled {
-		cacheStorage = cache.NewBadgerStorage(badgerdb, cfg.badgerCfg.ttl)
-	}
+	// Mailer setup
 
 	mailer := mailer.NewMailtrap(
 		cfg.mail.mailTrap.apiKey,

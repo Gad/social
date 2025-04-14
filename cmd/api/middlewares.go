@@ -108,7 +108,7 @@ func (app *application) TokenAuthMiddleware(next http.Handler) http.Handler {
 func (app *application) getUser(ctx context.Context, userID int64) (*store.User, error) {
 	
 	// if redis is not enabled, get user from db
-	if !app.config.redisCfg.enabled && !app.config.badgerCfg.enabled {
+	if app.config.cacheState==None {
 		return app.store.Users.GetUserById(ctx, userID)
 	}
 

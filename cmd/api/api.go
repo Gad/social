@@ -36,13 +36,23 @@ type config struct {
 	maxByte     int64 // max size for incoming http body to mitigate DDOS
 	mail        mailConfig
 	auth        authconfig
+	cacheState	cacheState
 	redisCfg    redisConfig
 	badgerCfg  badgerConfig	
 }
 
+type cacheState int
+const (
+	None cacheState = iota
+	Redis
+	Badger	
+	Memcached
+)
+
+
+
 type badgerConfig struct {
 	path     string
-	enabled  bool
 	ttl      time.Duration
 }
 
@@ -50,7 +60,6 @@ type redisConfig struct {
 	addr     string
 	password string
 	db       int
-	enabled  bool
 	ttl 	 time.Duration
 }
 
