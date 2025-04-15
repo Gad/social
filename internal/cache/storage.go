@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/dgraph-io/badger/v4"
 	"github.com/gad/social/internal/store"
 	"github.com/redis/go-redis/v9"
@@ -27,5 +28,11 @@ func NewRedisStorage(rdb *redis.Client, ttl time.Duration) Storage {
 func NewBadgerStorage(bdb *badger.DB, ttl time.Duration) Storage {	
 	return Storage{
 		Users: &BadgerUserStore{bdb : bdb, ttl : ttl},
+	}
+}
+
+func NewMemcachedStorage(mdb *memcache.Client, ttl time.Duration) Storage {
+	return Storage{
+		Users: &MemcachedUserStore{mdb : mdb, ttl: ttl},
 	}
 }

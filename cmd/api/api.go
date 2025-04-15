@@ -39,6 +39,7 @@ type config struct {
 	cacheState	cacheState
 	redisCfg    redisConfig
 	badgerCfg  badgerConfig	
+	memcacheCfg memcachedConfig
 }
 
 type cacheState int
@@ -49,7 +50,12 @@ const (
 	Memcached
 )
 
-
+type memcachedConfig struct {
+	host string
+	startingPort int
+	endingPort int
+	ttl time.Duration
+}
 
 type badgerConfig struct {
 	path     string

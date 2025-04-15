@@ -79,6 +79,12 @@ func main() {
 			path: env.GetString("BADGER_PATH", "/tmp/badger"),
 			ttl:  env.GetDuration("BADGER_TTL", time.Minute),
 		},
+		memcacheCfg: memcachedConfig{
+			host:         env.GetString("MEMCACHED_ADDR", "localhost"),
+			startingPort: env.GetInt("MEMCACHED_STARTING_PORT", 11211),
+			endingPort:   env.GetInt("MEMCACHED_ENDING_PORT", 11211),
+			ttl:          env.GetDuration("MEMCACHED_TTL", time.Minute),
+		},
 	}
 
 	// logger setup
@@ -108,14 +114,13 @@ func main() {
 	var redisdb *redis.Client
 	var badgerdb *badger.DB
 	var cacheStorage cache.Storage
-	
+
 	switch cfg.cacheState {
 	case Redis:
 		redisdb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.password, cfg.redisCfg.db)
 		logger.Info("Connection with Redis cache established")
 		cacheStorage = cache.NewRedisStorage(redisdb, cfg.redisCfg.ttl)
 		defer redisdb.Close()
-		
 
 	case Badger:
 		badgerdb, err = cache.NewBadgerDB()
@@ -127,6 +132,16 @@ func main() {
 			defer badgerdb.Close()
 		}
 		cacheStorage = cache.NewBadgerStorage(badgerdb, cfg.badgerCfg.ttl)
+
+	case Memcached:
+		memDb := cache.NewMemcachedClient(cfg.memcacheCfg.host, cfg.memcacheCfg.startingPort, cfg.memcacheCfg.endingPort)
+		if memDb == nil {
+			logger.Errorw("Could not connect to memcached database")
+		} else {
+			logger.Info("Connection with Memcached caches established")
+			defer memDb.Close()
+		}
+		cacheStorage = cache.NewMemcachedStorage(memDb, cfg.memcacheCfg.ttl)
 
 	case None:
 		redisdb = nil
