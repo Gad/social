@@ -1,11 +1,14 @@
 package auth
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
+
+var ErrInvalidToken = errors.New("invalid token")
 
 type JWTClaims struct {
 	//(issuer): issuer of the JWT

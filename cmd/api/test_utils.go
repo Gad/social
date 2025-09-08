@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gad/social/internal/auth"
 	"github.com/gad/social/internal/store"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
@@ -16,7 +17,7 @@ func newTestApplication(t *testing.T) *application {
 	return &application{
 		logger: zap.NewNop().Sugar(), // or logger: zap.Must((zap.NewProduction())).Sugar(),
 		store:  store.NewMockStore(),
-		
+		authenticator: auth.MockAuthenticator{},
 	}
 }
 
