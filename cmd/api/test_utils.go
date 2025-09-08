@@ -14,7 +14,7 @@ func newTestApplication(t *testing.T) *application {
 
 	t.Helper()
 	return &application{
-		logger: zap.Must((zap.NewProduction())).Sugar(),
+		logger: zap.NewNop().Sugar(), // or logger: zap.Must((zap.NewProduction())).Sugar(),
 		store:  store.NewMockStore(),
 		
 	}
@@ -25,4 +25,11 @@ func execRequest(mux *chi.Mux, req *http.Request) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()
 	mux.ServeHTTP(rr, req)
 	return rr
+}
+
+func checkResponseCode(t *testing.T, expected, actual int) {
+	t.Helper()
+	if expected != actual {
+		t.Errorf("Response code : got %v wanted %v", actual, expected)
+	}
 }

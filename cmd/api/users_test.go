@@ -17,10 +17,7 @@ func TestGetUser(t *testing.T) {
 		}
 
 		rr := execRequest(mux, req)
-
-		if status := rr.Code; status != http.StatusUnauthorized {
-			t.Errorf("Response code : got %v want %v", status, http.StatusUnauthorized)
-		}
+		checkResponseCode(t, http.StatusUnauthorized, rr.Code)
 
 	})
 }
