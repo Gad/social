@@ -72,9 +72,9 @@ func (s *UsersStore) Create(ctx context.Context, tx *sql.Tx, u *User) error {
 		query,
 		u.Email,
 		u.Username,
-		u.Role.Name,
 		// hash password
 		u.Password.hash,
+		u.Role.Name,
 	).Scan(
 		&u.ID,
 		&u.CreationDate,
