@@ -21,7 +21,6 @@ type Post struct {
 	User         User      `json:"user"`
 }
 
-
 type PostsStore struct {
 	db *sql.DB
 }

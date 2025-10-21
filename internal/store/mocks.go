@@ -12,8 +12,7 @@ func NewMockStore() Storage {
 	}
 }
 
-
-type MockUsersStore struct {}
+type MockUsersStore struct{}
 
 func (m *MockUsersStore) Create(ctx context.Context, tx *sql.Tx, u *User) error {
 	return nil
@@ -45,10 +44,7 @@ func (m *MockUsersStore) Delete(ctx context.Context, userID int64) error {
 
 func (m *MockUsersStore) GetUserByEmail(ctx context.Context, email string) (*User, error) {
 	return &User{
-		ID:        1,
-		Email:     "user@tests",
+		ID:    1,
+		Email: "user@tests",
 	}, nil
-}	
-
-
-
+}

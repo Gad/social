@@ -8,32 +8,31 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-func createLogger(env string) *zap.Logger{
+func createLogger(env string) *zap.Logger {
 
-	stdout:=zapcore.AddSync(os.Stdout)
+	stdout := zapcore.AddSync(os.Stdout)
 
 	log_file := zapcore.AddSync(&lumberjack.Logger{
-		Filename: "logs/app.log",
-		MaxSize: 2,
+		Filename:   "logs/app.log",
+		MaxSize:    2,
 		MaxBackups: 3,
-		MaxAge: 7,
+		MaxAge:     7,
 	})
 
-	// default setup => production 
+	// default setup => production
 
 	level := zap.NewAtomicLevelAt(zap.InfoLevel)
-	
-	switch env{
-	case "DEVELOPMENT": 
+
+	switch env {
+	case "DEVELOPMENT":
 		level = zap.NewAtomicLevelAt(zap.DebugLevel)
-	case "PRODUCTION": 
+	case "PRODUCTION":
 		level = zap.NewAtomicLevelAt(zap.InfoLevel)
 	}
 
-    Cfg := zap.NewProductionEncoderConfig()
-    Cfg.TimeKey = "timestamp"
-    Cfg.EncodeTime = zapcore.ISO8601TimeEncoder
-	
+	Cfg := zap.NewProductionEncoderConfig()
+	Cfg.TimeKey = "timestamp"
+	Cfg.EncodeTime = zapcore.ISO8601TimeEncoder
 
 	consoleCfg := Cfg
 	consoleCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
@@ -41,13 +40,13 @@ func createLogger(env string) *zap.Logger{
 	fileCfg := Cfg
 
 	consoleEncoder := zapcore.NewConsoleEncoder(consoleCfg)
-    fileEncoder := zapcore.NewJSONEncoder(fileCfg)
+	fileEncoder := zapcore.NewJSONEncoder(fileCfg)
 
-    core := zapcore.NewTee(
-        zapcore.NewCore(consoleEncoder, stdout, level),
-        zapcore.NewCore(fileEncoder, log_file, level),
-    )
+	core := zapcore.NewTee(
+		zapcore.NewCore(consoleEncoder, stdout, level),
+		zapcore.NewCore(fileEncoder, log_file, level),
+	)
 
-    return zap.New(core)
+	return zap.New(core)
 
 }

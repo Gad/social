@@ -34,25 +34,24 @@ type FollowingUser struct {
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	userID, err := strconv.ParseInt(chi.URLParam(r, "userid"), 10, 64)
-	if err != nil || userID <1{
+	if err != nil || userID < 1 {
 		app.badRequestResponse(w, r, err, true)
 		return
 	}
 	ctx := r.Context()
 
 	user, err := app.getUser(ctx, userID)
-		if err != nil {
-			switch {
-			case errors.Is(err, store.ErrorNotFound):
-				app.notFoundResponse(w, r, err)
+	if err != nil {
+		switch {
+		case errors.Is(err, store.ErrorNotFound):
+			app.notFoundResponse(w, r, err)
 
-			default:
-				app.internalServerErrorResponse(w, r, err)
+		default:
+			app.internalServerErrorResponse(w, r, err)
 
-			}
-			return
 		}
-
+		return
+	}
 
 	if err := app.jsonResponse(w, http.StatusOK, &user); err != nil {
 		app.internalServerErrorResponse(w, r, err)
@@ -84,7 +83,6 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	follower := getUserFromCtx(r)
-
 
 	if err := app.store.Users.Follow(r.Context(), followedID, follower.ID); err != nil {
 

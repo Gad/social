@@ -10,7 +10,7 @@ import (
 func NewMemcachedClient(host string, startingPort int, endingPort int) *memcache.Client {
 
 	var addr []string
-	for port := range(endingPort - startingPort +1) {
+	for port := range endingPort - startingPort + 1 {
 		addr = append(addr, fmt.Sprintf("%s:%d", host, startingPort+port))
 	}
 	log.Printf("Memcached address: %v", addr)

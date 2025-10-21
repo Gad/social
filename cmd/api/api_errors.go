@@ -53,7 +53,7 @@ func (app *application) authError(w http.ResponseWriter, r *http.Request, err er
 }
 
 func (app *application) forbiddenResponse(w http.ResponseWriter, r *http.Request, err error) {
-	app.logger.Warnw("Role Precedence failed", r.Method, "path", r.URL.Path,  "with error", err)
+	app.logger.Warnw("Role Precedence failed", r.Method, "path", r.URL.Path, "with error", err)
 
 	writeJsonError(w, http.StatusForbidden, "unauthorized")
 }

@@ -78,6 +78,7 @@ func (app *application) setFeedPagination(w http.ResponseWriter, r *http.Request
 	return fpq, nil
 
 }
+
 // getUserFeedHandler godoc
 //
 //	@Summary		Fetches the user feed

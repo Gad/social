@@ -34,7 +34,7 @@ func (s *CommentsStore) GetCommentsByPostId(ctx context.Context, postID int64) (
 	defer Rows.Close()
 
 	comments := []Comment{}
- 
+
 	for Rows.Next() {
 		var c Comment
 
@@ -48,7 +48,6 @@ func (s *CommentsStore) GetCommentsByPostId(ctx context.Context, postID int64) (
 			&c.User.ID,
 		)
 
-
 		if err != nil {
 			return nil, err
 		}
@@ -59,13 +58,13 @@ func (s *CommentsStore) GetCommentsByPostId(ctx context.Context, postID int64) (
 
 }
 
-func (s *CommentsStore) Create (ctx context.Context,c *Comment) error {
+func (s *CommentsStore) Create(ctx context.Context, c *Comment) error {
 	query := `
 	INSERT INTO comments(post_id, user_id, content)
 	VALUES ($1, $2, $3) RETURNING id, creation_date
 	`
 
-	ctx,Cancel := context.WithTimeout(ctx, timeOutDuration)
+	ctx, Cancel := context.WithTimeout(ctx, timeOutDuration)
 	defer Cancel()
 
 	err := s.db.QueryRowContext(
@@ -77,7 +76,6 @@ func (s *CommentsStore) Create (ctx context.Context,c *Comment) error {
 	).Scan(
 		&c.ID,
 		&c.CreationDate,
-		
 	)
 
 	if err != nil {

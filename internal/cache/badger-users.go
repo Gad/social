@@ -19,17 +19,17 @@ func (s *BadgerUserStore) Get(ctx context.Context, userID int64) (*store.User, e
 	cacheKey := fmt.Sprintf("user-%v", userID)
 	var data string
 	err := s.bdb.View(func(txn *badger.Txn) error {
-		
+
 		item, err := txn.Get([]byte(cacheKey))
 		if err != nil {
 			return err
 		}
 		valCopy, err := item.ValueCopy(nil)
-		
+
 		if err != nil {
 			return err
-		}	
-		data = string(valCopy)	
+		}
+		data = string(valCopy)
 		return nil
 	})
 
@@ -41,7 +41,7 @@ func (s *BadgerUserStore) Get(ctx context.Context, userID int64) (*store.User, e
 			return nil, err
 		}
 	}
-	
+
 	user := &store.User{}
 	if err := json.Unmarshal([]byte(data), user); err != nil {
 		return nil, err

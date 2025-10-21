@@ -57,10 +57,6 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		UserID:  user.ID,
 	}
 
-	
-
-	
-
 	if err := app.store.Posts.Create(ctx, p); err != nil {
 		app.internalServerErrorResponse(w, r, err)
 		return
@@ -72,6 +68,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	}
 
 }
+
 // GetPost godoc
 //
 //	@Summary		Fetches a post
@@ -144,11 +141,11 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 	app.jsonResponse(w, http.StatusNoContent, nil)
 }
 
-
 type updatePostPayload struct {
 	Title   *string `json:"title" validate:"omitempty,max=100"`
 	Content *string `json:"content" validate:"omitempty,max=100"`
 }
+
 // UpdatePost godoc
 //
 //	@Summary		Updates a post

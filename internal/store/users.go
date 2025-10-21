@@ -160,7 +160,7 @@ func (s *UsersStore) GetUserById(ctx context.Context, userID int64) (*User, erro
 		&u.Username,
 		&u.Email,
 		&u.Password.hash,
-		&u.CreationDate, 
+		&u.CreationDate,
 		&u.Role.ID,
 		&u.Role.Name,
 		&u.Role.Level,

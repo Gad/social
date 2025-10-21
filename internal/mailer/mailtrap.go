@@ -25,7 +25,7 @@ func NewMailtrap(apiKey, fromEmail, smtpAddr, smtpUsername string, smtpPort, max
 		smtpAddr:     smtpAddr,
 		smtpPort:     smtpPort,
 		smtpUsername: smtpUsername,
-        maxRetries: maxRetries,
+		maxRetries:   maxRetries,
 	}
 }
 
@@ -68,7 +68,7 @@ func (m *mailtrapMailer) htmlEmailFromTemplate(templateFile string, data any) (*
 	return subject, body, nil
 }
 
-func (m *mailtrapMailer) mailTrapDialing(destinationEmail string, subject, body *bytes.Buffer) (error) {
+func (m *mailtrapMailer) mailTrapDialing(destinationEmail string, subject, body *bytes.Buffer) error {
 
 	message := gomail.NewMessage()
 
@@ -96,10 +96,9 @@ func (m *mailtrapMailer) mailTrapDialing(destinationEmail string, subject, body 
 			time.Sleep(time.Second * time.Duration(i+1))
 			continue
 		}
-        return nil
+		return nil
 
 	}
-    return fmt.Errorf("failed to send verification email after %d attempts with error :%v",m.maxRetries ,RetryError)
+	return fmt.Errorf("failed to send verification email after %d attempts with error :%v", m.maxRetries, RetryError)
 
-	
 }

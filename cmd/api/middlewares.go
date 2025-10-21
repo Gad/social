@@ -106,9 +106,9 @@ func (app *application) TokenAuthMiddleware(next http.Handler) http.Handler {
 // and sets it in the context
 // it returns the user and an error if any
 func (app *application) getUser(ctx context.Context, userID int64) (*store.User, error) {
-	
+
 	// if redis is not enabled, get user from db
-	if app.config.cacheState==None {
+	if app.config.cacheState == None {
 		app.logger.Infow("fetching user from db", "userID", userID)
 
 		return app.store.Users.GetUserById(ctx, userID)
@@ -128,12 +128,10 @@ func (app *application) getUser(ctx context.Context, userID int64) (*store.User,
 		}
 	}
 
-
 	// set user in cache
 	if err := app.cacheStorage.Users.Set(ctx, user); err != nil {
 		app.logger.Warn("failed to set user in cache", err)
 	}
-
 
 	return user, nil
 

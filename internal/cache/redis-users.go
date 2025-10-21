@@ -21,7 +21,7 @@ func (s *RedisUserStore) Get(ctx context.Context, userID int64) (*store.User, er
 	if err != nil {
 		switch err {
 		case redis.Nil:
-			return nil,nil
+			return nil, nil
 		default:
 			return nil, err
 		}
@@ -31,7 +31,6 @@ func (s *RedisUserStore) Get(ctx context.Context, userID int64) (*store.User, er
 		return nil, err
 	}
 	return user, nil
-
 
 }
 

@@ -38,11 +38,10 @@ func (s *MemcachedUserStore) Set(ctx context.Context, user *store.User) error {
 	if user.ID == 0 {
 		return fmt.Errorf("user ID is required")
 	}
-	
+
 	cacheKey := fmt.Sprintf("user-%v", user.ID)
 	ttlSecondsInt := int32(s.ttl.Seconds())
-	
-	
+
 	json_data, err := json.Marshal(user)
 	if err != nil {
 		return err

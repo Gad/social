@@ -15,12 +15,11 @@ func newTestApplication(t *testing.T) *application {
 
 	t.Helper()
 	return &application{
-		logger: zap.NewNop().Sugar(), // or logger: zap.Must((zap.NewProduction())).Sugar(),
-		store:  store.NewMockStore(),
+		logger:        zap.NewNop().Sugar(), // or logger: zap.Must((zap.NewProduction())).Sugar(),
+		store:         store.NewMockStore(),
 		authenticator: auth.MockAuthenticator{},
 	}
 }
-
 
 func execRequest(mux *chi.Mux, req *http.Request) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()

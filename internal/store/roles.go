@@ -12,15 +12,14 @@ type RolesStore struct {
 type Role struct {
 	ID          int64  `json:"id"`
 	Name        string `json:"name"`
-	Level	   int    `json:"level"`
+	Level       int    `json:"level"`
 	Description string `json:"description"`
 }
 
-
 func (s *RolesStore) GetRoleByName(ctx context.Context, name string) (*Role, error) {
-	
+
 	query := `SELECT id, name, level, description FROM roles WHERE name = $1`
-	
+
 	ctx, Cancel := context.WithTimeout(ctx, timeOutDuration)
 	defer Cancel()
 	// Execute the query and scan the result into a Role struct

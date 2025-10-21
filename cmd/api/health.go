@@ -11,7 +11,7 @@ import (
 //	@Tags			operations
 //	@Produce		json
 //	@Success		200	{object}	string	"ok"
-//	@Failure		500 {object}	error
+//	@Failure		500	{object}	error
 //	@Router			/health [get]
 func (app *application) getHealthHandler(w http.ResponseWriter, r *http.Request) {
 

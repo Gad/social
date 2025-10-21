@@ -474,7 +474,6 @@ func Seed(store store.Storage, numUsers int, numPosts int, numComments int, db *
 	log.Println("Seeding Complete !")
 }
 
-
 func generateUsers(numUsers int) []*store.User {
 
 	users := make([]*store.User, numUsers)
@@ -486,7 +485,7 @@ func generateUsers(numUsers int) []*store.User {
 			Username: name,
 			Email:    fmt.Sprintf("%s@example.com", name),
 			Role: store.Role{
-				Name : "user",
+				Name: "user",
 			},
 		}
 		_ = users[i].Password.Set(name)
