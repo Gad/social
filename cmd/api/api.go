@@ -1,8 +1,13 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/gad/social/docs"
@@ -133,8 +138,9 @@ func (app *application) mnt_mux() *chi.Mux {
 	mux.Use(middleware.Timeout(time.Second * 60))
 
 	mux.Route("/v1", func(m chi.Router) {
-		m.With(app.BasicAuthMiddleware()).Get("/health", app.getHealthHandler)
-
+		//m.With(app.BasicAuthMiddleware()).Get("/health", app.getHealthHandler)
+		//TODO : reactivate Basic Authentication for /health after testing graceful shutdown
+		m.Get("/health", app.getHealthHandler)
 		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
 		m.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 		m.Route("/posts", func(m chi.Router) {
@@ -191,6 +197,36 @@ func (app *application) run_app(mux http.Handler) error {
 	}
 	app.logger.Infof("Starting HTTP server at %s", app.config.addr)
 
-	return srv.ListenAndServe()
+	shutdown := make(chan error)
+
+	go func() {
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+		s := <-quit
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		app.logger.Infow("Signal caught", "signal", s.String())
+
+		shutdown <- srv.Shutdown(ctx)
+
+	}()
+
+	err := srv.ListenAndServe()
+	if !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+
+	app.logger.Infow("listenAndServe error caught", "error", err)
+
+	err = <-shutdown
+	if err != nil {
+		return err
+	}
+
+	app.logger.Infow("Server stopped", "addr", app.config.addr, "env", app.config.env)
+
+	return nil
 
 }
