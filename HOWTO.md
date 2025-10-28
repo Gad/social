@@ -137,3 +137,12 @@ and the endpoints via:
 ip:port/v1/swagger/index.html
 
 Note : the `pre_cmd` field in the .air.toml needs to be filled with  `["make gen-docs"]` and the Makefile gen-docs entry  needs to be set accordingly.
+
+## Tips
+
++ In order to test graceful shutdown via SIGINT, the .air.toml needs to be modified with : 
+send_interrupt = true 
+and 
+kill_delay = "10s"
+
+
