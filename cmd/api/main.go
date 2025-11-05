@@ -9,6 +9,7 @@ import (
 	"github.com/gad/social/internal/db"
 	"github.com/gad/social/internal/env"
 	"github.com/gad/social/internal/mailer"
+	"github.com/gad/social/internal/ratelimiter"
 	"github.com/gad/social/internal/store"
 	"github.com/redis/go-redis/v9"
 )
@@ -85,6 +86,12 @@ func main() {
 			endingPort:   env.GetInt("MEMCACHED_ENDING_PORT", 11211),
 			ttl:          env.GetDuration("MEMCACHED_TTL", time.Minute),
 		},
+		rateLimitercfg: rateLimiterConfig{
+			rateLimiterType:      env.GetString("RATELIMITER_TYPE", "FIXED_WINDOW"),
+			requestsPerTimeFrame: env.GetInt("RATELIMITER_REQUESTS_PER_TIMEFRAME", 20),
+			timeFrame:            env.GetDuration("RATELIMITER_WINDOW_DURATION", time.Second*5),
+			enabled:              env.GetBool("RATELIMITER_ENABLED", true),
+		},
 	}
 
 	// logger setup
@@ -151,6 +158,14 @@ func main() {
 
 	}
 
+	var rateLimiter ratelimiter.Limiter
+	switch cfg.rateLimitercfg.rateLimiterType {
+	case "FIXED_WINDOW":
+		rateLimiter = ratelimiter.NewFixedWindowLimiter(
+			cfg.rateLimitercfg.requestsPerTimeFrame,
+			cfg.rateLimitercfg.timeFrame,
+		)
+	}
 	// Mailer setup
 
 	mailer := mailer.NewMailtrap(
@@ -174,6 +189,7 @@ func main() {
 		mailer:        mailer,
 		authenticator: jwtAuth,
 		cacheStorage:  cacheStorage,
+		rateLimiter:   rateLimiter,
 	}
 
 	logger.Fatal((app.run_app(app.mnt_mux())))

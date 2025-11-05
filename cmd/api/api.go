@@ -14,6 +14,7 @@ import (
 	"github.com/gad/social/internal/auth"
 	"github.com/gad/social/internal/cache"
 	"github.com/gad/social/internal/mailer"
+	"github.com/gad/social/internal/ratelimiter"
 	"github.com/gad/social/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -29,22 +30,24 @@ type application struct {
 	mailer        mailer.Client
 	authenticator auth.Authenticator
 	cacheStorage  cache.Storage
+	rateLimiter   ratelimiter.Limiter
 }
 
 type config struct {
-	addr        string
-	apiURL      string
-	frontendURL string
-	db          dbConfig
-	env         string
-	version     string
-	maxByte     int64 // max size for incoming http body to mitigate DDOS
-	mail        mailConfig
-	auth        authconfig
-	cacheState  cacheState
-	redisCfg    redisConfig
-	badgerCfg   badgerConfig
-	memcacheCfg memcachedConfig
+	addr           string
+	apiURL         string
+	frontendURL    string
+	db             dbConfig
+	env            string
+	version        string
+	maxByte        int64 // max size for incoming http body to mitigate DDOS
+	mail           mailConfig
+	auth           authconfig
+	cacheState     cacheState
+	redisCfg       redisConfig
+	badgerCfg      badgerConfig
+	memcacheCfg    memcachedConfig
+	rateLimitercfg rateLimiterConfig
 }
 
 type cacheState int
@@ -117,11 +120,18 @@ type dbConfig struct {
 	maxIdleTime  string
 }
 
+type rateLimiterConfig struct {
+	rateLimiterType      string
+	enabled              bool
+	requestsPerTimeFrame int
+	timeFrame            time.Duration
+}
+
 func (app *application) mnt_mux() *chi.Mux {
 
-	mux := chi.NewRouter()
+	m := chi.NewRouter()
 
-	mux.Use(cors.Handler(cors.Options{
+	m.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
@@ -130,14 +140,17 @@ func (app *application) mnt_mux() *chi.Mux {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
-	mux.Use(middleware.Logger)
-	mux.Use(middleware.Recoverer)
-	mux.Use(middleware.RequestID)
-	mux.Use(middleware.RealIP)
+	m.Use(middleware.Logger)
+	m.Use(middleware.Recoverer)
+	m.Use(middleware.RequestID)
+	m.Use(middleware.RealIP)
+	if app.config.rateLimitercfg.enabled {
+		m.Use(app.RateLimiter)
+	}
+	m.Use(middleware.Timeout(time.Second * 60))
 
-	mux.Use(middleware.Timeout(time.Second * 60))
+	m.Route("/v1", func(m chi.Router) {
 
-	mux.Route("/v1", func(m chi.Router) {
 		//m.With(app.BasicAuthMiddleware()).Get("/health", app.getHealthHandler)
 		//TODO : reactivate Basic Authentication for /health after testing graceful shutdown
 		m.Get("/health", app.getHealthHandler)
@@ -179,7 +192,7 @@ func (app *application) mnt_mux() *chi.Mux {
 
 	})
 
-	return mux
+	return m
 
 }
 

@@ -168,3 +168,18 @@ func (app *application) checkOwnerShip(role string, next http.HandlerFunc) http.
 
 	})
 }
+
+func (app *application) RateLimiter(next http.Handler) http.Handler {
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if app.config.rateLimitercfg.enabled {
+
+			if allow, retryAfter := app.rateLimiter.Allow(r.RemoteAddr); !allow {
+				app.tooManyCallsResponse(w, r, retryAfter.String())
+				return
+			}
+
+		}
+		next.ServeHTTP(w, r)
+	})
+}
