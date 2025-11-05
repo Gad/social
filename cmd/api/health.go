@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"time"
 )
 
 // healthCheck godoc
@@ -22,7 +21,6 @@ func (app *application) getHealthHandler(w http.ResponseWriter, r *http.Request)
 		"version": app.config.version,
 	}
 
-	time.Sleep(5 * time.Second)
 	if err := writeJson(w, http.StatusOK, data); err != nil {
 		app.internalServerErrorResponse(w, r, err)
 	}
