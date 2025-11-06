@@ -173,8 +173,8 @@ func (app *application) RateLimiter(next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if app.config.rateLimitercfg.enabled {
-
-			if allow, retryAfter := app.rateLimiter.Allow(r.RemoteAddr); !allow {
+			remoteAddr := strings.Split(r.RemoteAddr, ":")[0]
+			if allow, retryAfter := app.rateLimiter.Allow(remoteAddr); !allow {
 				app.tooManyCallsResponse(w, r, retryAfter.String())
 				return
 			}
