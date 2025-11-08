@@ -2,12 +2,10 @@ package cache
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
 
-	"github.com/gad/social/internal/store"
 	"github.com/redis/go-redis/v9"
 )
 
