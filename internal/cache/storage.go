@@ -17,12 +17,25 @@ type UserStorage struct {
 	}
 }
 
+type IPStorage struct {
+	IPs interface {
+		GetIPCount (context.Context, string) (int, error)
+		SetIPCount (context.Context, string, int) error 
+	}
+}
+
 func NewRedisStorage(rdb *redis.Client, ttl time.Duration) UserStorage {
 	return UserStorage{
 		Users: &RedisUserStore{rdb: rdb, ttl: ttl},
 	}
 }
 
+
+func NewRedisIPStorage(rdb *redis.Client, ttl time.Duration) IPStorage {
+	return IPStorage{
+		IPs: &RedisIPsStore{rdb: rdb, ttl: ttl},
+	}
+}
 func NewBadgerStorage(bdb *badger.DB, ttl time.Duration) UserStorage {
 	return UserStorage{
 		Users: &BadgerUserStore{bdb: bdb, ttl: ttl},
