@@ -10,27 +10,27 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type Storage struct {
+type UserStorage struct {
 	Users interface {
-		Get(context.Context, int64) (*store.User, error)
-		Set(context.Context, *store.User) error
+		GetUser(context.Context, int64) (*store.User, error)
+		SetUser(context.Context, *store.User) error
 	}
 }
 
-func NewRedisStorage(rdb *redis.Client, ttl time.Duration) Storage {
-	return Storage{
+func NewRedisStorage(rdb *redis.Client, ttl time.Duration) UserStorage {
+	return UserStorage{
 		Users: &RedisUserStore{rdb: rdb, ttl: ttl},
 	}
 }
 
-func NewBadgerStorage(bdb *badger.DB, ttl time.Duration) Storage {
-	return Storage{
+func NewBadgerStorage(bdb *badger.DB, ttl time.Duration) UserStorage {
+	return UserStorage{
 		Users: &BadgerUserStore{bdb: bdb, ttl: ttl},
 	}
 }
 
-func NewMemcachedStorage(mdb *memcache.Client, ttl time.Duration) Storage {
-	return Storage{
+func NewMemcachedStorage(mdb *memcache.Client, ttl time.Duration) UserStorage {
+	return UserStorage{
 		Users: &MemcachedUserStore{mdb: mdb, ttl: ttl},
 	}
 }

@@ -29,7 +29,7 @@ type application struct {
 	logger        *zap.SugaredLogger
 	mailer        mailer.Client
 	authenticator auth.Authenticator
-	cacheStorage  cache.Storage
+	cacheStorage  cache.UserStorage
 	rateLimiter   ratelimiter.Limiter
 }
 

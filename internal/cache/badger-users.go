@@ -15,7 +15,7 @@ type BadgerUserStore struct {
 	ttl time.Duration
 }
 
-func (s *BadgerUserStore) Get(ctx context.Context, userID int64) (*store.User, error) {
+func (s *BadgerUserStore) GetUser(ctx context.Context, userID int64) (*store.User, error) {
 	cacheKey := fmt.Sprintf("user-%v", userID)
 	var data string
 	err := s.bdb.View(func(txn *badger.Txn) error {
@@ -50,7 +50,7 @@ func (s *BadgerUserStore) Get(ctx context.Context, userID int64) (*store.User, e
 
 }
 
-func (s *BadgerUserStore) Set(ctx context.Context, user *store.User) error {
+func (s *BadgerUserStore) SetUser(ctx context.Context, user *store.User) error {
 	if user.ID == 0 {
 		return fmt.Errorf("user ID is required")
 	}

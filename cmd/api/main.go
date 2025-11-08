@@ -87,7 +87,7 @@ func main() {
 			ttl:          env.GetDuration("MEMCACHED_TTL", time.Minute),
 		},
 		rateLimitercfg: rateLimiterConfig{
-			rateLimiterType:      env.GetString("RATELIMITER_TYPE", "FIXED_WINDOW"),
+			rateLimiterType:      env.GetString("RATELIMITER_TYPE", "FIXED_WINDOW_REDIS"),
 			requestsPerTimeFrame: env.GetInt("RATELIMITER_REQUESTS_PER_TIMEFRAME", 20),
 			timeFrame:            env.GetDuration("RATELIMITER_WINDOW_DURATION", time.Second*5),
 			enabled:              env.GetBool("RATELIMITER_ENABLED", true),
@@ -120,7 +120,7 @@ func main() {
 	//Cache setup
 	var redisdb *redis.Client
 	var badgerdb *badger.DB
-	var cacheStorage cache.Storage
+	var cacheStorage cache.UserStorage
 
 	switch cfg.cacheState {
 	case Redis:
@@ -153,17 +153,27 @@ func main() {
 	case None:
 		redisdb = nil
 		badgerdb = nil
-		cacheStorage = cache.Storage{}
+		cacheStorage = cache.UserStorage{}
 		logger.Info("all cache disabled")
 
 	}
 
 	var rateLimiter ratelimiter.Limiter
 	switch cfg.rateLimitercfg.rateLimiterType {
-	case "FIXED_WINDOW":
+	case "FIXED_WINDOW_LOCAL":
 		rateLimiter = ratelimiter.NewFixedWindowLimiter(
 			cfg.rateLimitercfg.requestsPerTimeFrame,
 			cfg.rateLimitercfg.timeFrame,
+		)
+	case "FIXED_WINDOW_REDIS":
+		redisdb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.password, cfg.redisCfg.db)
+		logger.Info("Connection with Redis cache for rate limiting established")
+		cacheStorage = cache.NewRedisStorage(redisdb, cfg.redisCfg.ttl)
+		defer redisdb.Close()
+		rateLimiter = ratelimiter.NewRedisFixedWindowLimiter(
+			cfg.rateLimitercfg.requestsPerTimeFrame,
+			cfg.rateLimitercfg.timeFrame,
+			cacheStorage,
 		)
 	}
 	// Mailer setup

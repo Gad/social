@@ -15,7 +15,7 @@ type MemcachedUserStore struct {
 	ttl time.Duration
 }
 
-func (s *MemcachedUserStore) Get(ctx context.Context, userID int64) (*store.User, error) {
+func (s *MemcachedUserStore) GetUser(ctx context.Context, userID int64) (*store.User, error) {
 	cacheKey := fmt.Sprintf("user-%v", userID)
 	data, err := s.mdb.Get(cacheKey)
 	if err != nil {
@@ -34,7 +34,7 @@ func (s *MemcachedUserStore) Get(ctx context.Context, userID int64) (*store.User
 
 }
 
-func (s *MemcachedUserStore) Set(ctx context.Context, user *store.User) error {
+func (s *MemcachedUserStore) SetUser(ctx context.Context, user *store.User) error {
 	if user.ID == 0 {
 		return fmt.Errorf("user ID is required")
 	}

@@ -15,7 +15,7 @@ type RedisUserStore struct {
 	ttl time.Duration
 }
 
-func (s *RedisUserStore) Get(ctx context.Context, userID int64) (*store.User, error) {
+func (s *RedisUserStore) GetUser(ctx context.Context, userID int64) (*store.User, error) {
 	cacheKey := fmt.Sprintf("user-%v", userID)
 	data, err := s.rdb.Get(ctx, cacheKey).Result()
 	if err != nil {
@@ -34,7 +34,7 @@ func (s *RedisUserStore) Get(ctx context.Context, userID int64) (*store.User, er
 
 }
 
-func (s *RedisUserStore) Set(ctx context.Context, user *store.User) error {
+func (s *RedisUserStore) SetUser(ctx context.Context, user *store.User) error {
 	if user.ID == 0 {
 		return fmt.Errorf("user ID is required")
 	}
