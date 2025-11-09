@@ -15,8 +15,6 @@ import (
 //	@Router			/health [get]
 func (app *application) getHealthHandler(w http.ResponseWriter, r *http.Request) {
 
-	app.logger.Infow("Here")
-
 	data := map[string]string{
 		"status":  "ok",
 		"env":     app.config.env,

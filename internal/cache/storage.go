@@ -19,8 +19,7 @@ type UserStorage struct {
 
 type IPStorage struct {
 	IPs interface {
-		GetIPCount (context.Context, string) (int, error)
-		SetIPCount (context.Context, string, int) error 
+		IncrIPCount(context.Context, string) (int64, error)
 	}
 }
 
@@ -29,7 +28,6 @@ func NewRedisStorage(rdb *redis.Client, ttl time.Duration) UserStorage {
 		Users: &RedisUserStore{rdb: rdb, ttl: ttl},
 	}
 }
-
 
 func NewRedisIPStorage(rdb *redis.Client, ttl time.Duration) IPStorage {
 	return IPStorage{

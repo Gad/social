@@ -115,7 +115,7 @@ func (app *application) getUser(ctx context.Context, userID int64) (*store.User,
 	}
 
 	app.logger.Infow("Trying to get user from cache", "userID", userID)
-	user, err := app.cacheStorage.Users.Get(ctx, userID)
+	user, err := app.cacheStorage.Users.GetUser(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func (app *application) getUser(ctx context.Context, userID int64) (*store.User,
 	}
 
 	// set user in cache
-	if err := app.cacheStorage.Users.Set(ctx, user); err != nil {
+	if err := app.cacheStorage.Users.SetUser(ctx, user); err != nil {
 		app.logger.Warn("failed to set user in cache", err)
 	}
 
@@ -174,8 +174,13 @@ func (app *application) RateLimiter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if app.config.rateLimitercfg.enabled {
 			remoteAddr := strings.Split(r.RemoteAddr, ":")[0]
-			if allow, retryAfter := app.rateLimiter.Allow(remoteAddr); !allow {
-				app.tooManyCallsResponse(w, r, retryAfter.String())
+			allow, retryAfter, err := app.rateLimiter.Allow(remoteAddr)
+			if err != nil {
+				app.logger.Warnw("error trying to allow IP", "ratelimit type", app.config.rateLimitercfg.rateLimiterType, "remote addr", remoteAddr)
+				return
+			}
+			if !allow {
+				app.tooManyCallsResponse(w, r, retryAfter.String(), remoteAddr)
 				return
 			}
 

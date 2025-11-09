@@ -157,7 +157,6 @@ func main() {
 		logger.Info("all cache disabled")
 
 	}
-
 	var rateLimiter ratelimiter.Limiter
 	switch cfg.rateLimitercfg.rateLimiterType {
 	case "FIXED_WINDOW_LOCAL":
@@ -168,12 +167,12 @@ func main() {
 	case "FIXED_WINDOW_REDIS":
 		redisdb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.password, cfg.redisCfg.db)
 		logger.Info("Connection with Redis cache for rate limiting established")
-		cacheStorage = cache.NewRedisStorage(redisdb, cfg.redisCfg.ttl)
+		cacheIPStorage := cache.NewRedisIPStorage(redisdb, cfg.rateLimitercfg.timeFrame)
 		defer redisdb.Close()
 		rateLimiter = ratelimiter.NewRedisFixedWindowLimiter(
 			cfg.rateLimitercfg.requestsPerTimeFrame,
 			cfg.rateLimitercfg.timeFrame,
-			cacheStorage,
+			cacheIPStorage,
 		)
 	}
 	// Mailer setup

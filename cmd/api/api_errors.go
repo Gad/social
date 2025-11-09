@@ -58,9 +58,8 @@ func (app *application) forbiddenResponse(w http.ResponseWriter, r *http.Request
 	writeJsonError(w, http.StatusForbidden, "unauthorized")
 }
 
-func (app *application) tooManyCallsResponse(w http.ResponseWriter, r *http.Request, retryAfter string) {
-	app.logger.Warnw("Rate limit exceeded", "method", r.Method, "path", r.URL.Path)
-
+func (app *application) tooManyCallsResponse(w http.ResponseWriter, r *http.Request, retryAfter string, origin string) {
+	app.logger.Warnw("Rate limit exceeded", "method", r.Method, "path", r.URL.Path, "remote", origin)
 	w.Header().Set("Retry-after", retryAfter)
 	writeJsonError(w, http.StatusTooManyRequests, "rate limit reached, retry after: "+retryAfter)
 }
